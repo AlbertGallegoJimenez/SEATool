@@ -74,10 +74,9 @@ Project Link: [https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool]
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[forks-shield]: https://img.shields.io/github/forks/github_username/repo_name.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
 [forks-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/forks
-[stars-shield]: https://img.shields.io/github/stars/github_username/repo_name.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
 [stars-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/stargazers
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/albert-gallego-jimenez
-[product-screenshot]: images/framework.png
