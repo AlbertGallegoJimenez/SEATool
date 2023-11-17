@@ -1,0 +1,105 @@
+import arcpy
+import shapely
+from tools.utils.lineconverter import arcgis2shapely, shapely2arcgis
+
+
+class ComputeIntersection(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Intersection between Shorelines and Baseline"
+        self.description = "Compute the intersection between Sho"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        baseline_param = arcpy.Parameter(
+            displayName="Baseline Feature",
+            name="base_features",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        baseline_param.filter.list = ['Polyline']
+
+        shoreline_param = arcpy.Parameter(
+            displayName="Shorelines Feature",
+            name="shore_features",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        shoreline_param.filter.list = ['Polyline']
+
+        transects_param = arcpy.Parameter(
+            displayName="Transects Feature",
+            name="transects_features",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        transects_param.filter.list = ['Polyline']
+
+        baseline_points_param = arcpy.Parameter(
+            displayName="Baseline Intersection Points",
+            name="base_points",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Output")
+
+        shoreline_points_param = arcpy.Parameter(
+            displayName="Shoreline Intersection Points",
+            name="shore_points",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Output")
+
+        parameters = [baseline_param, shoreline_param, transects_param, baseline_points_param, shoreline_points_param]
+
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        aprx = arcpy.mp.ArcGISProject("CURRENT")
+
+        baseFeature = parameter[0].valueAsText
+        shoreFeature = parameter[1].valueAsText
+        transectsFeature = parameter[2].valueAsText
+
+        baseShapely = arcgis2shapely(baseFeature)
+        shoreShapely = arcgis2shapely(shoreFeature)
+        transectsShapely = arcgis2shapely(transectsFeature)
+
+        basePoints = transectsShapely.intersection(baseShapely)
+
+        arcpy.CreateFeatureclass_management(aprx.filePath,
+                                            "Baseline_Intersection",
+                                            "POINT")
+
+        with arcpy.da.InsertCursor("Baseline_Intersection", ["SHAPE@"]) as cursor:
+            for point in basePoints:
+                cursor.insertRow([arcpy.Point([(coord[0], coord[1]) for coord in point.coords])])
+
+
+        """
+        with arcpy.da.InsertCursor(new_fc, ["SHAPE@"]) as cursor:
+            new_geom = arcpy.FromWKB(line.wkb)
+            cursor.insertRow([new_geom])
+        """
+        return
+
+    def postExecute(self, parameters):
+        """This method takes place after outputs are processed and
+        added to the display."""
+        return
