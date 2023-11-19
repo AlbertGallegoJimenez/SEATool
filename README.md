@@ -46,7 +46,7 @@ The following is a list of the programs and libraries used in the tool, with the
 * ```statsmodels``` (version 0.13)
 
 In terms of data, this tool relies on the use of the following two files:
-* **Baseline** (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch.
+* **Baseline** (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, it is recommended to place the baseline **inland**. The baseline must capture the general orientation of the coast.
 * **Shorelines** (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
   * For the correct functioning of the tool, the file must have a **numeric ID** and **date fields**.
 
