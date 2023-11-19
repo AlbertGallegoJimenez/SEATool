@@ -48,13 +48,13 @@ The following is a list of the programs and libraries used in the tool, with the
 In terms of data, this tool relies on the use of the following two files:
 * **Baseline** (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch.
 * **Shorelines** (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
-  * For the correct functioning of the tool, the file must have a numeric ID and date fields.
+  * For the correct functioning of the tool, the file must have a **numeric ID** and **date fields**.
 
 ### Installation
 
-0. Make sure you have cloned the base ArcGIS' anaconda environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
+0. Make sure you have cloned the base ArcGIS' Anaconda environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
 1. Install both ```shapely``` and ```statsmodels``` packages.
-2. Download the content in the [src](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/src).
+2. Download the content in the [src](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/src) folder.
 3. Open the Catalog Pane in ArcGIS Pro and open the Toolbox (.pyt) to see the tools.
 <div align="center">
   <a href="https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool">
