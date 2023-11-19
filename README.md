@@ -39,15 +39,15 @@ This tool is developed as part of a [Python Toolbox](https://pro.arcgis.com/en/p
 ### Prerequisites
 The following is a list of the programs and libraries used in the tool, with their respective versions:
 
-* ArcGIS Pro (version 3.1)
-* Pandas (version 1.4)
-* Numpy (version 1.20)
-* Shapely (version 2.0)
-* Statsmodels (version 0.13)
+* ArcGIS Pro - ```arcpy``` (version 3.1)
+* ```pandas``` (version 1.4)
+* ```numpy``` (version 1.20)
+* ```shapely``` (version 2.0)
+* ```statsmodels``` (version 0.13)
 
 In terms of data, this tool relies on the use of the following two files:
-* Baseline (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch.
-* Shorelines (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
+* **Baseline** (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch.
+* **Shorelines** (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
   * For the correct functioning of the tool, the file must have a numeric ID and date fields.
 
 ### Installation
