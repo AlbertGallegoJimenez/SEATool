@@ -46,16 +46,16 @@ The following is a list of the programs and libraries used in the tool, with the
 * ```statsmodels``` (version 0.13)
 
 In terms of data, this tool relies on the use of the following two files:
-* **Baseline** (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, it is recommended to place the baseline **inland**. The baseline must capture the general orientation of the coast.
-* **Shorelines** (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
+* <ins>**Baseline**</ins> (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, it is recommended to place the baseline **inland**. The baseline must capture the general orientation of the coast.
+* <ins>**Shorelines**</ins> (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
   * For the correct functioning of the tool, the file must have a **numeric ID** and **date fields**.
 
 ### Installation
 
-0. Make sure you have cloned the base ArcGIS' Anaconda environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
+0. Make sure you have cloned the base ArcGIS' ```anaconda``` environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
 1. Install both ```shapely``` and ```statsmodels``` packages.
 2. Download the content in the [src](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/src) folder.
-3. Open the Catalog Pane in ArcGIS Pro and open the Toolbox (.pyt) to see the tools.
+3. Open the Catalog Pane in ArcGIS Pro and open the downloaded Toolbox (.pyt) to see the tools.
 <div align="center">
   <a href="https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool">
     <img src="images/open-toolbox.png" width="600" >
