@@ -67,6 +67,8 @@ In terms of data, this tool relies on the use of the following two files:
 
 For further details on how to run the different tools that make up the toolbox, click [here](https://arcg.is/ez9KK0).
 
+*The platform used to develop the website is ArcGIS StoryMaps, if you are interested in more details, click [here](https://www.esri.com/en-us/arcgis/products/arcgis-storymaps/overview).*
+
 <!-- CONTACT -->
 ## Contact
 
