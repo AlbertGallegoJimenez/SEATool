@@ -65,7 +65,7 @@ In terms of data, this tool relies on the use of the following two files:
 <!-- USAGE -->
 ## Usage
 
-For furtherdetails on how to run the different tools that make up the toolbox, click [here](https://arcg.is/ez9KK0).
+For further details on how to run the different tools that make up the toolbox, click [here](https://arcg.is/ez9KK0).
 
 <!-- CONTACT -->
 ## Contact
