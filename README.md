@@ -60,7 +60,12 @@ In terms of data, this tool relies on the use of the following two files:
   <a href="https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool">
     <img src="images/open-toolbox.png" width="600" >
   </a>
+</div>
 
+<!-- USAGE -->
+## Usage
+
+For furtherdetails on how to run the different tools that make up the toolbox, click [here](https://arcg.is/ez9KK0).
 
 <!-- CONTACT -->
 ## Contact
