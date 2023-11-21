@@ -72,7 +72,7 @@ For further details on how to run the different tools that make up the toolbox, 
   <img src="images/guide-website.PNG" alt="Website thumbnail" width="50%">
 </a>
 
-*The platform used to develop the website is ArcGIS StoryMaps, if you are interested in more details, click [here](https://www.esri.com/en-us/arcgis/products/arcgis-storymaps/overview).*
+*The platform used to develop the website is ArcGIS StoryMaps, if you are interested in more details click [here](https://www.esri.com/en-us/arcgis/products/arcgis-storymaps/overview).*
 </div>
 
 <!-- CONTACT -->
