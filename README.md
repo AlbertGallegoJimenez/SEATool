@@ -65,9 +65,15 @@ In terms of data, this tool relies on the use of the following two files:
 <!-- USAGE -->
 ## Usage
 
-For further details on how to run the different tools that make up the toolbox, click [here](https://arcg.is/ez9KK0).
+For further details on how to run the different tools that make up the toolbox, a step-by-step guide is detailed [here](https://arcg.is/ez9KK0).
+
+<div align="center">
+<a href="[URL/del/hipervinculo](https://arcg.is/ez9KK0)">
+  <img src="images/guide-website.PNG" alt="Website thumbnail" width="50%">
+</a>
 
 *The platform used to develop the website is ArcGIS StoryMaps, if you are interested in more details, click [here](https://www.esri.com/en-us/arcgis/products/arcgis-storymaps/overview).*
+</div>
 
 <!-- CONTACT -->
 ## Contact
