@@ -27,7 +27,7 @@ class CorrectTransects(object):
             displayName="Correction Factor",
             name="corr_factor",
             datatype="GPDouble",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input")
 
         # Output Feature parameter
@@ -78,6 +78,21 @@ class CorrectTransects(object):
         cursor = arcpy.da.SearchCursor(transectsFeature, ["transect_id", "Bearing"])
         df = pd.DataFrame(data=[row for row in cursor], columns=["transect_id", "Bearing"])
 
+        # === 0. Identify (if applicable) the inverted transects
+        processor = TransectProcessor(df, corrFactor)
+        processor.invert_angles()
+        
+        # Update the DataFrame
+        df = processor.df
+        # Make the changes in the feature class
+        RotateFeatures(df, transectsFeature)
+
+        # Recalulate the bearing with the transects inverted
+        arcpy.management.CalculateGeometryAttributes(transectsFeature, "Bearing LINE_BEARING")
+        cursor = arcpy.da.SearchCursor(transectsFeature, ["transect_id", "Bearing"])
+        df = pd.DataFrame(data=[row for row in cursor], columns=["transect_id", "Bearing"])
+        
+        # === 1. Identify and correct the transects with the largest differences between their orientations
         processor = TransectProcessor(df, corrFactor)
         processor.classify_transects()
         processor.interpolate_angles()
@@ -90,7 +105,7 @@ class CorrectTransects(object):
 
         # Delete the fields used to rotate the features
         arcpy.DeleteField_management(transectsFeature, ['Bearing', 'Angle'])
-
+        
         return
 
     def postExecute(self, parameters):

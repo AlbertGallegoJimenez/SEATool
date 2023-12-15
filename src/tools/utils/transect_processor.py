@@ -4,26 +4,37 @@ import numpy as np
 import pandas as pd
 
 class TransectProcessor(object):
-    def __init__(self, df, corrFactor=2):
+    def __init__(self, df, corrFactor):
         # Initialize the class with a DataFrame
         self.df = df.copy()
         # Set the correction factor
         self.corrFactor = corrFactor
         # Calculate the bearing differences between consecutive transects
         self.df['diffBear'] = self.df['Bearing'].diff()
-        # Calculate the mean and standard deviation of the bearing differences
-        self.mean_diff_bear = self.df['diffBear'].mean()
-        self.std_diff_bear = self.df['diffBear'].std()
+
+    def invert_angles(self):
+        # Detect if there are transects that are totally inverted and calculate the angle that needs to be rotated
+        # Detect the first transects that are inverted (if there are more than one change). To do so, find a difference angle around ~180º (it has been selected a range of 180 +-50).
+        start_change_transects = self.df[(self.df['diffBear'].abs() >= 130) & (self.df['diffBear'].abs() < 230)]['transect_id'].to_list()
+
+        transects2correct = []
+        for i, _ in enumerate(start_change_transects):
+            if (i + 1) % 2 != 0: # Odd number
+                if i == len(start_change_transects) - 1: # Is the last change
+                    mask = (self.df['transect_id'] > start_change_transects[i] - 1)
+                    transects2correct.extend(self.df[mask]['transect_id'].to_list())
+                else: # The change is not the last
+                    mask = (self.df['transect_id'] > start_change_transects[i] - 1) & (self.df['transect_id'] <= start_change_transects[i + 1] - 1)
+                    transects2correct.extend(self.df[mask]['transect_id'].to_list())
+            else:
+                pass
+        
+        self.df['Angle'] = 0
+        self.df.loc[self.df['transect_id'].isin(transects2correct), 'Angle'] = 180 # Rotate 180 degrees the bearing anle
 
     def classify_transects(self):
-        # Classify transects with large differences using the identify_values method
-        """
-        self.df['correctAngle'] = self.df['diffBear'].apply(
-            lambda x: (x > (self.mean_diff_bear + self.corrFactor * self.std_diff_bear)) or
-                      (x < (self.mean_diff_bear - self.corrFactor * self.std_diff_bear))
-        )
-        """
-        self.df['correctAngle'] = (self.df['diffBear'] > self.corrFactor) | (self.df['diffBear'] < -self.corrFactor)
+        # Classify transects with large differences using the corrFactor value. In addition, try not to take into account the differences in the 360-0 sector.
+        self.df['correctAngle'] = (self.df['diffBear'].abs() > self.corrFactor) & (self.df['diffBear'].abs() < 330)
 
     def interpolate_angles(self):
         # Interpolate angles for transects with large differences
