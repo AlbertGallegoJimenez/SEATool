@@ -111,9 +111,11 @@ class ComputeIntersection(object):
         #  == 1. Baseline Intersection Points ==
         basePoints = intersect_baseline(transectsShapely, baseShapely)
         # Create an empty Feature Class with empty field
-        arcpy.management.CreateFeatureclass("",
-                                            baseOutFeature,
-                                            "POINT",
+        if arcpy.Exists(baseOutFeature):
+            arcpy.Delete_management(baseOutFeature)
+
+        arcpy.management.CreateFeatureclass(out_name=baseOutFeature,
+                                            geometry_type="POINT",
                                             spatial_reference=sr)
         arcpy.management.AddField(baseOutFeature, transectsID, 'SHORT')
 
@@ -132,9 +134,10 @@ class ComputeIntersection(object):
         #  == 2. Shoreline Intersection Points ==
         shorePoints = intersect_shorelines(transectsShapely, shoreShapely)
         # Create an empty Feature Class with empty fields
-        arcpy.management.CreateFeatureclass("",
-                                            shoreOutFeature,
-                                            "POINT",
+        if arcpy.Exists(shoreOutFeature):
+            arcpy.Delete_management(shoreOutFeature)
+        arcpy.management.CreateFeatureclass(out_name=shoreOutFeature,
+                                            geometry_type="POINT",
                                             spatial_reference=sr)
         arcpy.management.AddField(shoreOutFeature, transectsID, 'SHORT')
         arcpy.management.AddField(shoreOutFeature, shoreID, 'SHORT')
