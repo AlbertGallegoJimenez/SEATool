@@ -102,6 +102,8 @@ class PerformAnalysis(object):
 
         # Get the current symbology settings of the layer
         sym = transectsLayerObj.symbology
+        # Get the layer's CIM definition
+        cim = transectsLayerObj.getDefinition('V3')
 
         # Set the renderer to Graduated Colors
         sym.updateRenderer('GraduatedColorsRenderer')
@@ -111,6 +113,7 @@ class PerformAnalysis(object):
 
         # Specify the field used for classification
         sym.renderer.classificationField = 'LRR'
+        cim.renderer.heading = 'LRR (m/year)'
 
         # Set the number of class breaks
         sym.renderer.breakCount = 6
@@ -132,5 +135,6 @@ class PerformAnalysis(object):
 
         # Apply the updated symbology settings to the layer
         transectsLayerObj.symbology = sym
+        transectsLayerObj.setDefinition(cim)
 
         return
