@@ -1,10 +1,8 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Downloads][downloads-shield]][downloads-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+[![Release][release-shield]][release-url]
+[![LastCommit][lastcommit-shield]][lastcommit-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -88,11 +86,7 @@ Project Link: [https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool]
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[forks-shield]: https://img.shields.io/github/forks/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
-[forks-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/forks
-[stars-shield]: https://img.shields.io/github/stars/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
-[stars-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/stargazers
-[downloads-shield]: https://img.shields.io/github/downloads/AlbertGallegoJimenez/shoreline-evolution-tool/total.svg?style=for-the-badge
-[downloads-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/releases
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/albert-gallego-jimenez
+[release-shield]: https://img.shields.io/github/release/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
+[release-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/releases
+[lastcommit-shield]: https://img.shields.io/github/last-commit/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
+[lastcommit-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/releases
