@@ -64,7 +64,7 @@ In terms of data, this tool relies on the use of the following two files:
 <!-- USAGE -->
 ## Usage
 
-For further details on how to run the different tools that make up the toolbox, a step-by-step guide is detailed [here](https://arcg.is/ez9KK0).
+For further details on how to run the different tools that make up the toolbox, a step-by-step guide is detailed [here](https://arcg.is/ez9KK0). The example for testing the tool is available in the [example](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/example) folder of the repository.
 
 <div align="center">
 <a href="https://arcg.is/ez9KK0">
