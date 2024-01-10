@@ -108,6 +108,7 @@ class GenerateTransects(object):
     def postExecute(self, parameters):
         """This method takes place after outputs are processed and
         added to the display."""
+        # Update the labels of the transect feature
         aprx = arcpy.mp.ArcGISProject('CURRENT')
         aprxMap = aprx.activeMap
         transectsFeature = aprxMap.listLayers(os.path.basename(parameters[0].valueAsText))[0]

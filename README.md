@@ -36,13 +36,12 @@ This tool is developed as part of a [Python Toolbox](https://pro.arcgis.com/en/p
 ## Getting Started
 
 ### Prerequisites
-The following is a list of the programs and libraries used in the tool, with their respective versions:
 
-* ArcGIS Pro - ```arcpy``` (version 3.1)
-* ```pandas``` (version 1.4)
-* ```numpy``` (version 1.20)
-* ```shapely``` (version 2.0)
-* ```statsmodels``` (version 0.13)
+Check that you have installed all the required libraries used in the toolbox. All packages with their tested versions are listed in [requirements.txt](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/requirements.txt). Note that when working with a cloned version of the ArcGIS ```anaconda``` environment there are already pre-installed libraries, those that are not and need to be installed manually are the following:
+
+* ```shapely```
+* ```statsmodels``` (from ArcGIS version 3.2 this package is included in the base ArcGIS ```anaconda``` environment)
+* ```cartopy```
 
 In terms of data, this tool relies on the use of the following two files:
 * <ins>**Baseline**</ins> (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, it is recommended to place the baseline **inland**. The baseline must capture the general orientation of the coast.
@@ -51,8 +50,8 @@ In terms of data, this tool relies on the use of the following two files:
 
 ### Installation
 
-0. Make sure you have cloned the base ArcGIS' ```anaconda``` environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
-1. Install both ```shapely``` and ```statsmodels``` packages.
+0. Make sure you have cloned the base ArcGIS ```anaconda``` environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
+1. Install ```shapely```, ```statsmodels``` and ```cartopy``` packages if you do not have it installed yet.
 2. Download the content in the [src](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/src) folder.
 3. Open the Catalog Pane in ArcGIS Pro and open the downloaded Toolbox (.pyt) to see the tools.
 <div align="center">

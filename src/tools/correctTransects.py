@@ -74,7 +74,6 @@ class CorrectTransects(object):
 
         # Add Bearing attribute
         arcpy.management.CalculateGeometryAttributes(transectsFeature, "Bearing LINE_BEARING")
-
         cursor = arcpy.da.SearchCursor(transectsFeature, ["transect_id", "Bearing"])
         df = pd.DataFrame(data=[row for row in cursor], columns=["transect_id", "Bearing"])
 
@@ -87,7 +86,7 @@ class CorrectTransects(object):
         # Make the changes in the feature class
         RotateFeatures(df, transectsFeature)
 
-        # Recalulate the bearing with the transects inverted
+        # Recalculate the bearing with the transects inverted
         arcpy.management.CalculateGeometryAttributes(transectsFeature, "Bearing LINE_BEARING")
         cursor = arcpy.da.SearchCursor(transectsFeature, ["transect_id", "Bearing"])
         df = pd.DataFrame(data=[row for row in cursor], columns=["transect_id", "Bearing"])
@@ -111,6 +110,7 @@ class CorrectTransects(object):
     def postExecute(self, parameters):
         """This method takes place after outputs are processed and
         added to the display."""
+        # Update the labels of the transect feature
         aprx = arcpy.mp.ArcGISProject('CURRENT')
         aprxMap = aprx.activeMap
         transectsFeature = aprxMap.listLayers(os.path.basename(parameters[0].valueAsText))[0]

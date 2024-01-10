@@ -81,11 +81,9 @@ class PerformAnalysis(object):
         for field in metrics_fields:
             arcpy.management.AddField(transectsFeature, field, "DOUBLE")
 
-        count = 0
         with arcpy.da.UpdateCursor(transectsFeature, metrics_fields) as cursor:
-            for row in cursor:
-                cursor.updateRow(shore_metrics.loc[count, metrics_fields].tolist())
-                count += 1
+            for i, _ in enumerate(cursor):
+                cursor.updateRow(shore_metrics.loc[i, metrics_fields].tolist())
 
         return
 
@@ -102,8 +100,6 @@ class PerformAnalysis(object):
 
         # Get the current symbology settings of the layer
         sym = transectsLayerObj.symbology
-        # Get the layer's CIM definition
-        cim = transectsLayerObj.getDefinition('V3')
 
         # Set the renderer to Graduated Colors
         sym.updateRenderer('GraduatedColorsRenderer')
@@ -113,7 +109,6 @@ class PerformAnalysis(object):
 
         # Specify the field used for classification
         sym.renderer.classificationField = 'LRR'
-        cim.renderer.heading = 'LRR (m/year)'
 
         # Set the number of class breaks
         sym.renderer.breakCount = 6
@@ -125,7 +120,7 @@ class PerformAnalysis(object):
         labels = ["-50.0 - -4.0", "-4.0 - -2.0", "-2.0 - 0.0", "0.0 - 2.0", "2.0 - 4.0", "4.0 - 50.0"]
 
         # Define sizes for each class
-        sizes = [4, 2, 1, 1, 2, 4]
+        sizes = [6, 3, 1.5, 1.5, 3, 6]
 
         # Update values for each class
         for i, brk in enumerate(sym.renderer.classBreaks):
@@ -135,6 +130,21 @@ class PerformAnalysis(object):
 
         # Apply the updated symbology settings to the layer
         transectsLayerObj.symbology = sym
-        transectsLayerObj.setDefinition(cim)
 
+        # Get the layer's CIM definition
+        cim = transectsLayerObj.getDefinition('V3')
+
+        # Set the label for the symbolised field
+        cim.renderer.heading = 'LRR (m/year)'
+
+        # Exclude non-significant transects and apply unique symbology
+        cim.renderer.useExclusionSymbol = True
+        cim.renderer.exclusionClause = 'Pvalue > 0.05'
+        cim.renderer.exclusionLabel = 'Non-significant transect'
+        cim.renderer.exclusionSymbol.symbol.symbolLayers[0].color.values = [130, 130, 130, 100]
+        cim.renderer.exclusionSymbol.symbol.symbolLayers[0].width = 1.5
+        
+        # Update the CIM
+        transectsLayerObj.setDefinition(cim)
+        
         return

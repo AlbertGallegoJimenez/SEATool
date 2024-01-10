@@ -1,0 +1,11 @@
+# Name                    Version
+arcgispro (software)      3.1
+arcpy                     3.1
+cartopy                   0.21.1
+matplotlib                3.6.0
+numpy                     1.20.1
+pandas                    1.4.4
+regex                     2022.7.9
+seaborn                   0.12.1
+shapely                   2.0.1
+statsmodels               0.13.5
