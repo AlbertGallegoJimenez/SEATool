@@ -7,7 +7,7 @@ class PerformAnalysis(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "3. Perform The Analysis"
-        self.description = ""
+        self.description = "Perform the Linear Regression Analysis on each transect."
         self.canRunInBackground = False
 
     def getParameterInfo(self):

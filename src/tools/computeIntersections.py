@@ -29,7 +29,7 @@ class ComputeIntersection(object):
         shoreline_param.filter.list = ['Polyline']
 
         shore_id_param = arcpy.Parameter(
-            displayName="Name of ID Shoreline Field",
+            displayName="Name of Shorelines ID Field",
             name="id_shore",
             datatype="Field",
             parameterType="Required",

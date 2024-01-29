@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 import re
+import contextily as cx
 import cartopy.crs as ccrs
 from tools.utils.intersect_lines import *
 from matplotlib.colors import Normalize, TwoSlopeNorm
@@ -118,6 +119,32 @@ class PlottingUtils():
         
         return cmap, norm, extend_cbar
     
+    def _set_xylim(self, list_shapely):
+        """
+        Private method to set the x and y limits for plotting LRR, SCE and NSM.
+
+        Parameters:
+            list_shapely (dict): Dictionary of transect_id (key) and transects geometry in Shapely format (value).
+
+        Returns:
+            x_lim (list): List with the starting and ending x limits.
+            y_lim (list): List with the starting and ending y limits.
+        """
+        # Get a list with all longitudes and latitudes values for all vertices of each transect
+        lons = [x for t in list_shapely.values() for x in t.xy[0]]
+        lats = [y for t in list_shapely.values() for y in t.xy[1]]
+
+        # Calculate the offset for each axis
+        x_offset = abs(max(lons) - min(lons)) / 10
+        y_offset = abs(max(lats) - min(lats)) / 10
+
+        # Set the x and y limits       
+        x_lim = [min(lons) - x_offset, max(lons) + x_offset]
+        y_lim = [min(lats) - y_offset, max(lats) + y_offset]
+
+        return x_lim, y_lim
+
+
      #  ===== FROM HERE, ALL THE FUNCTIONS TO CREATE THE PLOTS ARE DEFINED =====
   
     def plot_spatial_evolution(self):
@@ -282,7 +309,8 @@ class PlottingUtils():
                 ls = '--'
             
             # Plot the transect line
-            ax.plot(*t.xy,
+            x, y = t.xy
+            ax.plot(x, y,
                     color=color,
                     transform=proj,
                     lw=3,
@@ -308,9 +336,15 @@ class PlottingUtils():
             ax.set_title('Net Shoreline Movement, NSM (m)', y=1.05)
 
         # Set limits, labels, legend, and save the figure
-        lons = [x for t in self.transects_shapely.values() for x in t.xy[0]] # Extract the longitudes for plotting purposes (Sometimes the plot is centered to the west and a blank space is left to the east of the study area)
-        ax.set_xlim([ax.get_xlim()[0], max(lons)])
+        try:
+            cx.add_basemap(ax, crs=proj, source=cx.providers.Esri.WorldImagery, alpha=.7, attribution_size=6)
+        except:
+            arcpy.AddMessage("Basemap could not be added to the {}_transect.png map.".format(metric))
+            
+        x_lim, y_lim = self._set_xylim(self.transects_shapely)
+        ax.set_xlim(x_lim)
+        ax.set_ylim(y_lim)
         ax.set_xlabel('Eastings (m)')
         ax.set_ylabel('Northings (m)')
-        ax.legend(handles=[legend_entry], fontsize='small')
+        ax.legend(handles=[legend_entry], fontsize='small', loc='best')
         fig.savefig(os.path.join(self.out_dir, '{0}_transects.png'.format(metric)), dpi=300, bbox_inches='tight')

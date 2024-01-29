@@ -4,8 +4,8 @@ from tools.utils.plot_results import PlottingUtils
 class PlotResults(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "5. Plot The Analysis Results"
-        self.description = ""
+        self.label = "4. Plot The Analysis Results"
+        self.description = "Plot some figures to see the analysis results."
         self.canRunInBackground = False
 
     def getParameterInfo(self):

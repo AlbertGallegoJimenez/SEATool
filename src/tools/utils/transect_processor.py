@@ -76,5 +76,3 @@ class RotateFeatures(object):
         qx = ox + math.cos(angle_rad) * (px - ox) - math.sin(angle_rad) * (py - oy)
         qy = oy + math.sin(angle_rad) * (px - ox) + math.cos(angle_rad) * (py - oy)    
         return arcpy.Point(qx, qy)
-    
-
