@@ -1,6 +1,7 @@
 import arcpy
 import pandas as pd
 import numpy as np
+import os
 from tools.utils.shoreline_evolution import ShorelineEvolution
 
 class PerformAnalysis(object):
@@ -85,6 +86,9 @@ class PerformAnalysis(object):
             for i, _ in enumerate(cursor):
                 cursor.updateRow(shore_metrics.loc[i, metrics_fields].tolist())
 
+        # Export the output CSVs
+        self._export_output_data(shoreFeatures, transectsID, shore_metrics)
+        
         return
 
     def postExecute(self, parameters):
@@ -148,3 +152,31 @@ class PerformAnalysis(object):
         transectsLayerObj.setDefinition(cim)
         
         return
+
+    def _export_output_data(self, shoreFeatures, transectsID, shore_metrics):
+        """
+        Private method to export the output data.
+
+        Parameters:
+            shoreFeatures (str): Name of Shoreline Intersection Points Feature Class.
+            transectsID (str): Name of ID field of Transects Feature Class.
+            shore_metrics (pd.DataFrame): DataFrame where the metrics of the analysis are stored.
+
+        Returns:
+            
+        """
+        # Extract the values of the feature class by arcpy cursor
+        cursor = arcpy.da.SearchCursor(shoreFeatures, [transectsID, "date", "distance_from_base"])
+        shoreFeatures_df = pd.DataFrame(data=[row for row in cursor], columns=[transectsID, "date", "distance_from_base"])
+
+        # Set the directory where XLSX will be stored
+        aprx = arcpy.mp.ArcGISProject('CURRENT')
+        out_dir = os.path.join(aprx.homeFolder, 'Output data')
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
+        
+        # Export the shorelines intersections to a XLSX file
+        shoreFeatures_df.to_excel(os.path.join(out_dir, 'shorelines_distances.xlsx'), index=False)
+
+        # Export the metrics of the Linear Regression Fit to a XLSX file
+        shore_metrics.to_excel(os.path.join(out_dir, 'analysis_metrics_transects.xlsx'), index=False)
