@@ -8,6 +8,7 @@ import re
 import contextily as cx
 import cartopy.crs as ccrs
 from tools.utils.intersect_lines import *
+import matplotlib.patheffects as pe
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.cm import ScalarMappable
 import matplotlib.lines as mlines
@@ -165,18 +166,18 @@ class PlottingUtils():
         # Plot mean +-2*std width value for each transect
         ax.fill_between(self.shore_intersections_df['transect_id'].unique(),
                         self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean()+\
-                        2 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
+                        1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
                         self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean()-\
-                        2 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
-                        color='#bfbbd9', alpha=.5, lw=0, label='avg\u00B12std', zorder=0)
+                        1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
+                        color='#bfbbd9', alpha=.5, lw=0, label='avg\u00B1std', zorder=0)
         
         # Plot settings
         ax.set_xticks((np.arange(0, max(self.shore_intersections_df['transect_id']) + 2, 2)).tolist())
-        ax.set_xlabel('transect_id')
-        ax.set_ylabel('distance from baseline (m)')
+        ax.set_xlabel('Transect id')
+        ax.set_ylabel('Distance from baseline (m)')
         ax.set_xlim([-1, max(self.shore_intersections_df['transect_id']) + 2])
-        plt.text(-0.05, 0.9, 'seaward', transform=plt.gca().transAxes, horizontalalignment='right', fontstyle='italic')
-        plt.text(-0.05, .1, 'landward', transform=plt.gca().transAxes, horizontalalignment='right', fontstyle='italic')
+        plt.text(-0.05, 0.9, 'Seaward', transform=plt.gca().transAxes, horizontalalignment='right', fontstyle='italic')
+        plt.text(-0.05, .1, 'Landward', transform=plt.gca().transAxes, horizontalalignment='right', fontstyle='italic')
         plt.grid(linestyle='--', alpha=0.3)
         ax.legend()
         ax.set_title('Spatial shoreline evolution (%.f - %.f)' % (self.shore_intersections_df['date'].min().year,
@@ -189,6 +190,9 @@ class PlottingUtils():
 
         fig = plt.figure(figsize=(12, 2 * len(transects2plot)))
         gs = GridSpec(len(transects2plot), 7, figure=fig)
+        
+        # Variable to hold reference to the first x-axis created
+        first_x_axis = None
 
         for i, t in enumerate(transects2plot):
             ax = fig.add_subplot(gs[i, :-1])
@@ -202,15 +206,19 @@ class PlottingUtils():
             y = data_transect.loc[:, 'distance_from_base']  # target
 
             # Plot time series
-            #y.plot(ax=ax, color='#5B9CFD', linestyle='-', marker='o', markersize=2, label='shoreline positions')
             ax.plot(X, y.values, linestyle='-', marker='o', markersize=2, label='shoreline positions')
             sns.regplot(x=X, y=y, ci=95, scatter=False, label='linear regression fit', ax=ax)
 
             # Plot settings
-            ax.set_ylabel('distance from\nbaseline (m)')
+            ax.set_ylabel('Distance from\nbaseline (m)')
             ax.locator_params(axis='y', nbins=4)
-            ax.set_title('transect ' + str(t))
+            ax.set_title('Transect ' + str(t))
             ax.grid(alpha=0.3)
+            # Share the x-axis in the time series plot
+            if first_x_axis is None:
+                first_x_axis = ax
+            else:
+                ax.get_shared_x_axes().join(first_x_axis, ax)
 
             # Plot LRR error plot
             ax2 = fig.add_subplot(gs[i, -1:])
@@ -218,6 +226,7 @@ class PlottingUtils():
             lci = self.transects_df.loc[self.transects_df['transect_id']==t, ['LCI_low', 'LCI_upp']].to_numpy()[0]
             ax2.errorbar(0, lrr, yerr=([abs(lci[0] - lrr.values[0])], [lci[1] - lrr.values[0]]),
                         fmt='or', markersize=8, capsize=5)
+            
             # Plot settings
             ax2.set_xticklabels([])
             ax2.locator_params(axis='y', nbins=4)
@@ -227,12 +236,12 @@ class PlottingUtils():
             
             if i == len(transects2plot) - 1:
                 # Time series plot
-                ax.set_xlabel('')
+                ax.legend(fontsize=8, loc='best')
+                ax.set_xlabel('Date')
                 xticks = ax.get_xticks()
                 labels = [pd.Timestamp.fromordinal(int(label)).date().strftime("%m-%Y") for label in xticks]
                 ax.set_xticks(xticks)
                 ax.set_xticklabels(labels)
-                ax.legend(fontsize=8)
                 
                 # LRR error plot
                 ax2.set_xlabel('LRR\u00B195%\n(m/year)')
@@ -253,11 +262,11 @@ class PlottingUtils():
         shore_month = self.shore_intersections_df.copy()
         shore_month['month'] = shore_month['date'].dt.month
 
-        fig, ax = plt.subplots(len(transects2plot), 1, figsize=(10, 15), sharex=True)
+        fig, ax = plt.subplots(len(transects2plot), 1, figsize=(10, 4 * len(transects2plot)), sharex=True)
 
         for i, t in enumerate(transects2plot):
             # Grab the data
-            data = shore_month.loc[shore_month['transect_id']==t, ['month', 'distance_from_base']]
+            data = shore_month.loc[shore_month['transect_id'] == t, ['month', 'distance_from_base']]
             
             # Median values Line plot
             ax[i].plot(data.groupby('month')['distance_from_base'].median(),
@@ -270,14 +279,15 @@ class PlottingUtils():
             
             # Plot settings
             ax[i].set_xlabel('')
-            ax[i].set_ylabel('distance from\nbaseline (m)')
+            ax[i].set_ylabel('Distance from\nbaseline (m)')
             ax[i].locator_params(axis='y', nbins=5)
-            ax[i].set_title('transect ' + str(t))
+            ax[i].set_title('Transect ' + str(t))
             ax[i].grid(linestyle='--', alpha=0.3)
             ax[i].grid(axis='x', alpha=0)
             
             if i == len(transects2plot) - 1:
                 ax[i].set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] * len(transects2plot))
+                ax[i].set_xlabel('Months')
                 
         fig.suptitle(None)
         plt.subplots_adjust(hspace=0.2)
@@ -315,9 +325,16 @@ class PlottingUtils():
                     transform=proj,
                     lw=3,
                     ls=ls)
+            
+            # Add labels every two transects
+            if i % 2 == 0:
+                x_cent, y_cent = t.centroid.xy
+                ax.text(x_cent[0], y_cent[0], str(i), color='black', transform=proj, fontsize='x-small',
+                        ha='center', va='center', path_effects=[pe.withStroke(linewidth=2, foreground='white')])
 
         # Create a legend entry for non-significant transects
         legend_entry = mlines.Line2D([], [], color='gray', lw=2, ls='--', label='Non-significant transect')
+
 
         # Customize gridlines, ticks, and appearance
         ax.gridlines(crs=proj, linewidth=1, color='black', alpha=0, linestyle="--")

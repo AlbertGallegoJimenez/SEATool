@@ -64,7 +64,7 @@ class CorrectTransects(object):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
         parameters[1].setWarningMessage(
-            "Try different values greater than ~10, you can start with the default value (15).")
+            "The correction factor is the largest acceptable difference in orientation between consecutive transects.")
         return
 
     def execute(self, parameters, messages):

@@ -11,7 +11,7 @@
     <img src="images/logo-tool.png" alt="Logo" width="270" height="200">
   </a>
 
-<h3 align="center">Shoreline Evolution Analysis</h3>
+<h3 align="center">Shoreline Evolution Analysis Toolbox</h3>
 
   <p align="center">
     This repository houses a set of tools that allow the user to perform simple and automated regression analysis of a given coastal zone, all integrated into ArcGIS Pro.
@@ -49,6 +49,9 @@ In terms of data, this tool relies on the use of the following two files:
 * <ins>**Baseline**</ins> (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, it is recommended to place the baseline **inland**. The baseline must capture the general orientation of the coast.
 * <ins>**Shorelines**</ins> (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
   * For the correct functioning of the tool, the file must have a **numeric ID** and **date fields**.
+
+> [!WARNING]
+> Note that both **Baseline** and **Shorelines** must be defined in a projected coordinate system, not a geographic coordinate system.
 
 ### Installation
 
