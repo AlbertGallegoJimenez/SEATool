@@ -40,10 +40,12 @@ This tool is developed as part of a [Python Toolbox](https://pro.arcgis.com/en/p
 Check that you have installed all the required libraries used in the toolbox. All packages with their tested versions are listed in [requirements.txt](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/requirements.txt). Note that when working with a cloned version of the ArcGIS ```anaconda``` environment there are already pre-installed libraries, those that are not and need to be installed manually are the following:
 
 * ```shapely```
-* ```statsmodels``` (from ArcGIS version 3.2 this package is included in the base ArcGIS ```anaconda``` environment)
+* ```statsmodels```
 * ```cartopy```
 * ```seaborn```
 * ```contextily```
+
+_From ArcGIS version 3.2, both ```statsmodels``` and ```seaborn``` packages are included in the base ArcGIS ```anaconda``` environment._
 
 In terms of data, this tool relies on the use of the following two files:
 * <ins>**Baseline**</ins> (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, it is recommended to place the baseline **inland**. The baseline must capture the general orientation of the coast.
