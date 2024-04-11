@@ -311,7 +311,7 @@ class PlottingUtils():
         proj = ccrs.UTM(UTM_number, southern_hemisphere=southern_hemisphere)
 
         # Create a subplot with UTM projection
-        fig, ax = plt.subplots(layout='compressed', subplot_kw={'projection':proj})
+        fig, ax = plt.subplots(subplot_kw={'projection':proj})
 
         # Iterate through transects and plot lines
         for i, t in self.transects_shapely.items():
