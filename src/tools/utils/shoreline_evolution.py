@@ -8,10 +8,11 @@ class ShorelineEvolution:
         """
         Class constructor
         
-        Args: 
+        Params: 
             df (pandas.DataFrame): Time series data with at least three columns, one for dates, one for the variable of interest and another for transects.
             transect_id (integer): Number of the transect in which the analysis will be performed.
         """
+        # Copy the DataFrame
         self.df = df.copy()
         self.transect_id = transect_id
         
@@ -21,7 +22,6 @@ class ShorelineEvolution:
         # Set date as index
         if self.df['date'].dtype == 'object':
             self.df['date'] = pd.to_datetime(self.df['date'])
-            
         self.df.set_index('date', inplace=True)
               
         # Calculate the number of days elapsed since the first date

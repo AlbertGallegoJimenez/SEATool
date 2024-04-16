@@ -1,6 +1,9 @@
 import arcpy
+import os
 import shapely
-from tools.utils.intersect_lines import *
+from shapely.geometry import Point
+from tools.utils.intersect_lines import IntersectLines
+from tools.utils.generic_funs import get_geodatabase_path, create_new_fields
 
 
 class ComputeIntersection(object):
@@ -9,6 +12,7 @@ class ComputeIntersection(object):
         self.label = "2. Intersect Shorelines And Baseline With Transects"
         self.description = "Compute the intersection points for Shorelines and Baseline with Transects"
         self.canRunInBackground = False
+        arcpy.env.overwriteOutput = True
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -88,10 +92,8 @@ class ComputeIntersection(object):
         return
 
     def execute(self, parameters, messages):
-
         """The source code of the tool."""
-        arcpy.env.overwriteOutput = True
-
+        # Define the parameters
         baseFeature = parameters[0].valueAsText
         shoreFeature = parameters[1].valueAsText
         shoreID = parameters[2].valueAsText
@@ -100,80 +102,90 @@ class ComputeIntersection(object):
         baseOutFeature = parameters[4].valueAsText
         shoreOutFeature = parameters[5].valueAsText
 
-        # Convert ArcGIS geometry to Shapely
-        baseShapely = line_arcgis2shapely(baseFeature, None)
-        shoreShapely = line_arcgis2shapely(shoreFeature, shoreID)
-        transectsShapely = line_arcgis2shapely(transectsFeature, transectsID)
+        #  == Convert ArcGIS geometry to Shapely geometry ==
+        # Baseline
+        baseShapely = IntersectLines.line_arcgis2shapely(baseFeature, None)
+        # Shorelines
+        shoreShapely = IntersectLines.line_arcgis2shapely(shoreFeature, shoreID)
+        # Transects
+        transectsShapely = IntersectLines.line_arcgis2shapely(transectsFeature, transectsID)
 
-        # Convert two empty Feature Classes for the intersections (baseline and shorelines)
+        # == Create two empty Feature Classes for the intersections (baseline and shorelines)
+        # Get the spatial reference
         sr = arcpy.Describe(parameters[0].valueAsText).spatialReference
-
+        
         #  == 1. Baseline Intersection Points ==
-        basePoints = intersect_baseline(transectsShapely, baseShapely)
-        # Create an empty Feature Class with empty field
+        # Get the intersection points
+        basePoints = IntersectLines.intersect_baseline(transectsShapely, baseShapely) # dict
+        
+        # Check if the output feature class exists and delete it
         if arcpy.Exists(baseOutFeature):
             arcpy.Delete_management(baseOutFeature)
-
-        arcpy.management.CreateFeatureclass(out_name=baseOutFeature,
+        # Get the gdb path and the output fc name
+        gdb_path = get_geodatabase_path(baseOutFeature)
+        baseOutFeature_name = os.path.basename(baseOutFeature)
+        # Create the feature class
+        arcpy.management.CreateFeatureclass(out_path=gdb_path,
+                                            out_name=baseOutFeature_name,
                                             geometry_type="POINT",
                                             spatial_reference=sr)
+        # Add the transect_id field
         arcpy.management.AddField(baseOutFeature, transectsID, 'SHORT')
-
-        # Fill with geometries (intersection points)
-        with arcpy.da.InsertCursor(baseOutFeature, ["SHAPE@"]) as cursor:
-            for point in basePoints.values():
-                cursor.insertRow([arcpy.Point(coord[0], coord[1]) for coord in point.coords])
-
-        # Fill the id field
-        i = 0
-        with arcpy.da.UpdateCursor(baseOutFeature, [transectsID]) as cursor:
-            for row in cursor:
-                cursor.updateRow([list(basePoints.keys())[i]])
-                i += 1
+        # Fill with the geometries (intersection points) and the transect_id
+        with arcpy.da.InsertCursor(baseOutFeature, [transectsID, "SHAPE@"]) as cursor:
+            for id, point in basePoints.items():
+                # Insert the row with the id and the point
+                cursor.insertRow([id, arcpy.Point(coord[0], coord[1]) for coord in point.coords])
 
         #  == 2. Shoreline Intersection Points ==
-        shorePoints = intersect_shorelines(transectsShapely, shoreShapely)
-        # Create an empty Feature Class with empty fields
+        # Get the intersection points
+        shorePoints = IntersectLines.intersect_shorelines(transectsShapely, shoreShapely) # dict
+        
+        # Check if the output feature class exists and delete it
         if arcpy.Exists(shoreOutFeature):
             arcpy.Delete_management(shoreOutFeature)
-        arcpy.management.CreateFeatureclass(out_name=shoreOutFeature,
+        # Get the output fc name
+        shoreOutFeature_name = os.path.basename(shoreOutFeature)
+        # Create the feature class
+        arcpy.management.CreateFeatureclass(out_path=gdb_path,
+                                            out_name=shoreOutFeature_name,
                                             geometry_type="POINT",
                                             spatial_reference=sr)
-        arcpy.management.AddField(shoreOutFeature, transectsID, 'SHORT')
-        arcpy.management.AddField(shoreOutFeature, shoreID, 'SHORT')
-        arcpy.management.AddField(shoreOutFeature, "distance_from_base", 'DOUBLE')
-
-        # Fill with geometries (intersection points)
-        with arcpy.da.InsertCursor(shoreOutFeature, ["SHAPE@"]) as cursor:
-            for point in shorePoints.values():
-                if type(point) == list:
-                    for part in point:
-                        cursor.insertRow([arcpy.Point(coord[0], coord[1]) for coord in part.coords])
-                else:
-                    cursor.insertRow([arcpy.Point(coord[0], coord[1]) for coord in point.coords])
-
-        # Fill the id fields
-        list_keys = []
+        # Add the transect_id, shore_id and the distance from baseline fields
+        fields_to_add = [transectsID, shoreID, "distance_from_base"]
+        data_type = ["SHORT", "SHORT", "DOUBLE"]
+        create_new_fields(shoreOutFeature, fields_to_add, data_type)
+        
+        """
+        Get the keys of shorePoints (dictionary). The keys are tuples with the ids of the transects and shorelines.
+        If the value is a list, add the key as many times as the length of the list (to match the number of geometries with the number of ids).
+        """
+        shore_keys = []
         for key, value in shorePoints.items():
-            if type(value) == list:
+            if isinstance(value, list): # The intersection point is a list of points (MultiPoint)
                 for _ in range(len(value)):
-                    list_keys.append((key[0], key[1]))
+                    shore_keys.append((key[0], key[1]))
             else:
-                list_keys.append((key[0], key[1]))
+                shore_keys.append((key[0], key[1]))
+        
+        # Fill with the geometries (intersection points) and the transect_id and shore_id
+        with arcpy.da.InsertCursor(shoreOutFeature, [transectsID, shoreID, "SHAPE@"]) as cursor:
+            for i, point in enumerate(shorePoints.values()):
+                if isinstance(point, list): # The intersection point is a list of points (MultiPoint)
+                    for part in point:
+                        # Insert the row with the transect_id and shore_id and the point
+                        cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arcpy.Point(coord[0], coord[1]) for coord in part.coords])
+                else:
+                    # Insert the row with the transect_id and shore_id and the point
+                    cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arcpy.Point(coord[0], coord[1]) for coord in point.coords])
 
-        i = 0
-        with arcpy.da.UpdateCursor(shoreOutFeature, [transectsID, shoreID]) as cursor:
-            for row in cursor:
-                row[0], row[1] = list_keys[i][0], list_keys[i][1]
-                cursor.updateRow(row)
-                i += 1
-
-        # Add the other fields of Shorelines Feature Class
+        # Add the other fields of the Polyline Shorelines Feature Class
+        # Get the fields to join
         fieldsToJoin = [field.name for field in arcpy.ListFields(shoreFeature)
                         if "object" not in field.name.lower()
                         and "shape" not in field.name.lower()
                         and field.name.lower() != shoreID]
-
+        # Join the fields
         arcpy.management.JoinField(
             in_data=shoreOutFeature,
             in_field=shoreID,
@@ -184,13 +196,17 @@ class ComputeIntersection(object):
             field_mapping=None
         )
 
-        # Calculate Distances
-        basePoints = point_arcgis2shapely(baseOutFeature, transectsID)
-
+        # == Calculate distances from baseline to shoreline points ==
+        # Read the geometries of the baseOutFeature (baseline intersection points)
+        basePoints = IntersectLines.point_arcgis2shapely(baseOutFeature, transectsID)
+        # Update the distance_from_base field from the shoreOutFeature
         with arcpy.da.UpdateCursor(shoreOutFeature, ["SHAPE@", transectsID, "distance_from_base"]) as cursor:
             for row in cursor:
-                shapely_geom = Point([(geom.X, geom.Y) for geom in row[0]][0])
-                row[2] = basePoints[row[1]].distance(shapely_geom)
+                # Get the geometry of the point
+                shore_shapely_geom = Point([(geom.X, geom.Y) for geom in row[0]][0])
+                # Calculate the distance from the baseline
+                row[2] = basePoints[row[1]].distance(shore_shapely_geom)
+                # Update the row
                 cursor.updateRow(row)
         return
 

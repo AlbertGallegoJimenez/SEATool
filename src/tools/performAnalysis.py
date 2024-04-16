@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from tools.utils.shoreline_evolution import ShorelineEvolution
+from tools.utils.generic_funs import create_new_fields
 
 class PerformAnalysis(object):
     def __init__(self):
@@ -51,51 +52,76 @@ class PerformAnalysis(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        # Get the parameters
         shoreFeatures = parameters[0].valueAsText
         transectsFeature = parameters[1].valueAsText
         transectsID = "transect_id"
-
+        
+        # Get the data from the Shoreline Intersection Points Feature Class
         cursor = arcpy.da.SearchCursor(shoreFeatures, [transectsID, "date", "distance_from_base"])
+        # Create a DataFrame with the data
         df = pd.DataFrame(data=[row for row in cursor], columns=[transectsID, "date", "distance_from_base"])
-
-        if df[[transectsID, "date"]].duplicated(keep=False).sum() != 0:
+        
+        # For the multiple intersections, keep only the minimum distance from the base for each transect and date.
+        if df[[transectsID, "date"]].duplicated(keep=False).sum() != 0: # If there are multiple intersections
+            # Keep only the minimum distance from the base for each transect and date
             df = df.groupby(by=[transectsID, "date"], as_index=False).agg(
                 {"distance_from_base": "min"}).sort_values([transectsID, "date"])
         else:
+            # Sort the DataFrame by transect ID and date (to ensure the correct order of the data)
             df = df.sort_values([transectsID, "date"])
 
+        # Perform the Linear Regression Analysis on each transect
+        # Calculate the metrics of the Linear Regression Fit
         shore_metrics = pd.DataFrame({transectsID: np.arange(1, df[transectsID].max() + 1, 1)})
+        # LRR: Linear Regression Rate and Confidence Intervals
         shore_metrics[["LRR", "LCI_low", "LCI_upp"]] = shore_metrics[transectsID].apply(
             lambda x: pd.Series(ShorelineEvolution(df=df, transect_id=x).LRR()))
+        # R2: Coefficient of Determination
         shore_metrics["R2"] = shore_metrics[transectsID].apply(
             lambda x: ShorelineEvolution(df=df, transect_id=x).R2())
+        # Pvalue: P-value of the Linear Regression Fit
         shore_metrics["Pvalue"] = shore_metrics[transectsID].apply(
             lambda x: ShorelineEvolution(df=df, transect_id=x).Pvalue())
+        # RMSE: Root Mean Square Error
         shore_metrics["RMSE"] = shore_metrics[transectsID].apply(
             lambda x: ShorelineEvolution(df=df, transect_id=x).RMSE())
+        # SCE: Shoreline Change Envelope
         shore_metrics["SCE"] = shore_metrics[transectsID].apply(
             lambda x: ShorelineEvolution(df=df, transect_id=x).SCE())
+        # NSM: Net Shoreline Movement
         shore_metrics["NSM"] = shore_metrics[transectsID].apply(
             lambda x: ShorelineEvolution(df=df, transect_id=x).NSM())
+        
+        # Add the metrics to the Transects Feature Class
+        metrics_fields = shore_metrics.columns[1::].tolist() # Exclude the transect ID
+        # Create the new fields in the Transects Feature Class
+        create_new_fields(transectsFeature, metrics_fields, ['DOUBLE'] * len(metrics_fields))
 
-        metrics_fields = shore_metrics.columns[1::].tolist()
-        for field in metrics_fields:
-            arcpy.management.AddField(transectsFeature, field, "DOUBLE")
-
+        # Update the Transects Feature Class with the metrics
         with arcpy.da.UpdateCursor(transectsFeature, metrics_fields) as cursor:
             for i, _ in enumerate(cursor):
+                # Update the row with the metrics
                 cursor.updateRow(shore_metrics.loc[i, metrics_fields].tolist())
 
         # Export the output CSVs
         self._export_output_data(shoreFeatures, transectsID, shore_metrics)
+        arcpy.AddMessage("The analysis has been successfully performed.\nPlease check the output data in the 'Output data' folder.")
         
         return
 
     def postExecute(self, parameters):
         """This method takes place after outputs are processed and
         added to the display."""
+        
+        """
+        Define a generic symbology for the Transects Feature Class.
+        The symbology will be based on the Linear Regression Rate (LRR) field.
+        """
+        # Get the parameters
         transectsFeature = parameters[1].valueAsText
-
+        
+        # Get the ArcGIS Project
         aprx = arcpy.mp.ArcGISProject("CURRENT")
         aprxMap = aprx.activeMap
 
@@ -163,7 +189,7 @@ class PerformAnalysis(object):
             shore_metrics (pd.DataFrame): DataFrame where the metrics of the analysis are stored.
 
         Returns:
-            
+            None
         """
         # Extract the values of the feature class by arcpy cursor
         cursor = arcpy.da.SearchCursor(shoreFeatures, [transectsID, "date", "distance_from_base"])

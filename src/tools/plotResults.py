@@ -58,6 +58,7 @@ class PlotResults(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        # Get the parameters
         shoreFeatures = parameters[0].valueAsText
         transectsFeature = parameters[1].valueAsText
         transectsID_2plot = parameters[2].value
@@ -76,7 +77,8 @@ class PlotResults(object):
         # Plot the time series for the transects selected
         plotter.plot_time_series(transects2plot=transectsID_2plot)
 
-        # Plot the seasonality for the transects selected. Set a minimum of 2 years of data to plot the seasonality.
+        # Plot the seasonality for the transects selected.
+        # Set a minimum of 2 years of data to plot the seasonality.
         if plotter.shore_intersections_df['date'].dt.year.max() - plotter.shore_intersections_df['date'].dt.year.min() >= 2:
             plotter.plot_seasonality(transects2plot=transectsID_2plot)
 
@@ -88,6 +90,8 @@ class PlotResults(object):
 
         # Plot the NSM map
         plotter.plot_map('NSM')
+        
+        arcpy.AddMessage("The analysis results have been plotted successfully.\n Please, check the 'Plots results' folder.")
 
         return
 
@@ -97,9 +101,16 @@ class PlotResults(object):
         return
     
     def _check_transects_id(self, transectsID_2plot, transectsFeature):
-        """This private method checks that all transects 
-        passed by the user are valid."""
-
+        """
+        This method checks the transects ID selected by the user.
+        
+        Parameters:
+            - transectsID_2plot: List of the transects ID selected by the user.
+            - transectsFeature: Path to the transects feature class.
+            
+        Returns:
+            - None (Raises an exception if the IDs are not valid). 
+        """
         # Check that all IDs are numerical. This code may be unnecessary since the parameter is defined as 'GPLong' and this means that ArcGIS will only accept numerical values.
         if not all(isinstance(id, (int, float)) for id in transectsID_2plot):
             arcpy.AddError('Invalid transect ID, check that all IDs are numeric.')

@@ -69,31 +69,37 @@ class CorrectTransects(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        # Define the parameters
         transectsFeature = parameters[0].valueAsText
         corrFactor = float(parameters[1].valueAsText)
 
         # Add Bearing attribute
         arcpy.management.CalculateGeometryAttributes(transectsFeature, "Bearing LINE_BEARING")
         cursor = arcpy.da.SearchCursor(transectsFeature, ["transect_id", "Bearing"])
+        # Create a DataFrame with the transects and their bearings
         df = pd.DataFrame(data=[row for row in cursor], columns=["transect_id", "Bearing"])
 
         # === 0. Identify (if applicable) the inverted transects
         processor = TransectProcessor(df, corrFactor)
-        processor.invert_angles()
+        processor.invert_angles() # Identify the transects that are totally inverted
         
         # Update the DataFrame
-        df = processor.df
+        df = processor.df # This dataframe contains the transects with the inverted angles
         # Make the changes in the feature class
         RotateFeatures(df, transectsFeature)
 
         # Recalculate the bearing with the transects inverted
         arcpy.management.CalculateGeometryAttributes(transectsFeature, "Bearing LINE_BEARING")
         cursor = arcpy.da.SearchCursor(transectsFeature, ["transect_id", "Bearing"])
+        # Create a DataFrame with the transects and their (updated) bearings
         df = pd.DataFrame(data=[row for row in cursor], columns=["transect_id", "Bearing"])
         
         # === 1. Identify and correct the transects with the largest differences between their orientations
+        # Create an instance of the TransectProcessor class
         processor = TransectProcessor(df, corrFactor)
+        # Classify the transects with large differences, that is, the transects that need to be corrected
         processor.classify_transects()
+        # Interpolate the angles of the transects that need to be corrected
         processor.interpolate_angles()
         
         # Update the DataFrame

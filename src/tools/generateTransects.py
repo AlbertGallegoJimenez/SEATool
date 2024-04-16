@@ -6,6 +6,7 @@ class GenerateTransects(object):
         """Define the tool (tool name is the name of the class)."""
         self.label = "1a. Generate Transects Along Baseline"
         self.description = "Generate transects along the baseline for further analysis based on these transects."
+        arcpy.env.overwriteOutput = True
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -57,11 +58,11 @@ class GenerateTransects(object):
         has been changed."""
         aprx = arcpy.mp.ArcGISProject("CURRENT")
         projectName = os.path.splitext(os.path.basename(aprx.filePath))[0]
-
+        # Set the default values for the distance and length parameters
         params_suggestions = {parameters[1]: "100 Meters",
                               parameters[2]: "300 Meters",
                               parameters[3]: projectName + "_Transects"}
-
+        # Update the parameters
         for param in params_suggestions:
             if not param.altered:
                 param.value = params_suggestions[param]
@@ -75,30 +76,34 @@ class GenerateTransects(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-        arcpy.env.overwriteOutput = True
-
+        # Define the parameters
         inFeatures = parameters[0].valueAsText
         distanceValue = parameters[1].valueAsText
         lengthValue = parameters[2].valueAsText
         outFeatures = parameters[3].valueAsText
 
+        # Generate transects along the baseline
         arcpy.management.GenerateTransectsAlongLines(inFeatures,
                                                      outFeatures,
                                                      distanceValue + " Meters",
                                                      lengthValue + " Meters",
                                                      "NO_END_POINTS")
-
+        # Add a field to the transects feature
         arcpy.management.AddField(outFeatures, "transect_id", 'SHORT')
         arcpy.management.CalculateField(outFeatures, "transect_id", "!OBJECTID!")
-
+        
+        # If the transect has more than 2 vertices, keep only the first two.
+        # I don't know the reason why the GenerateTransectsAlongLines tool creates transects with more than 2 vertices, but this is a workaround.
         with arcpy.da.UpdateCursor(outFeatures, ["transect_id", "SHAPE@"]) as cursor:
             for row in cursor:
-                if len(row[1]) > 1:
+                if len(row[1]) > 1: # If the transect has more than 2 vertices
+                    # Keep only the first two vertices
                     row[1] = arcpy.Polyline(arcpy.Array([(point.X, point.Y) for point in row[1][:2]]))
+                    # Update the row
                     cursor.updateRow(row)
                 else:
                     pass
-
+        # Delete the ORIG_FID field that is created by the GenerateTransectsAlongLines tool
         fieldList = [field.name for field in arcpy.ListFields(outFeatures)]
         if 'ORIG_FID' in fieldList:
             arcpy.management.DeleteField(outFeatures, 'ORIG_FID')
