@@ -54,6 +54,7 @@ In terms of data, this tool relies on the use of the following two files:
 
 > [!WARNING]
 > Note that both **Baseline** and **Shorelines** must be defined in a projected coordinate system, not a geographic coordinate system.
+> These layers must be stored as **Feature Classes in the Geodatabase** of the ArcGIS project.
 
 ### Installation
 
