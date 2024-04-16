@@ -7,7 +7,7 @@ import os
 import re
 import contextily as cx
 import cartopy.crs as ccrs
-from tools.utils.intersect_lines import *
+from tools.utils.generic_funs import line_arcgis2shapely
 import matplotlib.patheffects as pe
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.cm import ScalarMappable
@@ -350,7 +350,8 @@ class PlottingUtils():
 
         # Add colorbar and set title
         if self.transects_df['Pvalue'].min() <= 0.05:
-            fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), extend=extend_cbar, ax=ax)
+            # shrink to 0.5 the colorbar
+            fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), extend=extend_cbar, ax=ax, shrink=0.5)
         if metric == 'LRR':
             ax.set_title('Linear Regression Rate, LRR (m/year)', y=1.05)
         elif metric == 'SCE':

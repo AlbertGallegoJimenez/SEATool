@@ -134,8 +134,10 @@ class ComputeIntersection(object):
         # Fill with the geometries (intersection points) and the transect_id
         with arcpy.da.InsertCursor(baseOutFeature, [transectsID, "SHAPE@"]) as cursor:
             for id, point in basePoints.items():
+                # Create the arcgis point
+                arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in point.coords][0]
                 # Insert the row with the id and the point
-                cursor.insertRow([id, arcpy.Point(coord[0], coord[1]) for coord in point.coords])
+                cursor.insertRow([id, arc_Point])
 
         #  == 2. Shoreline Intersection Points ==
         # Get the intersection points
@@ -173,11 +175,15 @@ class ComputeIntersection(object):
             for i, point in enumerate(shorePoints.values()):
                 if isinstance(point, list): # The intersection point is a list of points (MultiPoint)
                     for part in point:
+                        # Create the arcgis point
+                        arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in part.coords][0]
                         # Insert the row with the transect_id and shore_id and the point
-                        cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arcpy.Point(coord[0], coord[1]) for coord in part.coords])
+                        cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arc_Point])
                 else:
+                    # Create the arcgis point
+                    arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in point.coords][0]
                     # Insert the row with the transect_id and shore_id and the point
-                    cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arcpy.Point(coord[0], coord[1]) for coord in point.coords])
+                    cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arc_Point])
 
         # Add the other fields of the Polyline Shorelines Feature Class
         # Get the fields to join
