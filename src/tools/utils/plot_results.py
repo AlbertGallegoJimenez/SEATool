@@ -110,7 +110,7 @@ class PlottingUtils():
             norm = TwoSlopeNorm(vmin=metric_min, vcenter=0, vmax=metric_max)
             extend_cbar = 'both'
         elif metric_min < 0 and metric_max < 0:
-            cmap = plt.get_cmap('Reds')
+            cmap = plt.get_cmap('Reds_r')
             norm = Normalize(vmin=metric_min, vmax=0)
             extend_cbar = 'min'
         elif metric_min > 0 and metric_max > 0:
