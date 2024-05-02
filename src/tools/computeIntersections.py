@@ -159,31 +159,23 @@ class ComputeIntersection(object):
         create_new_fields(shoreOutFeature, fields_to_add, data_type)
         
         """
-        Get the keys of shorePoints (dictionary). The keys are tuples with the ids of the transects and shorelines.
+        Iterate over the shorePoints (dictionary). The keys are tuples with the ids of the transects and shorelines.
         If the value is a list, add the key as many times as the length of the list (to match the number of geometries with the number of ids).
         """
-        shore_keys = []
-        for key, value in shorePoints.items():
-            if isinstance(value, list): # The intersection point is a list of points (MultiPoint)
-                for _ in range(len(value)):
-                    shore_keys.append((key[0], key[1]))
-            else:
-                shore_keys.append((key[0], key[1]))
-        
         # Fill with the geometries (intersection points) and the transect_id and shore_id
         with arcpy.da.InsertCursor(shoreOutFeature, [transectsID, shoreID, "SHAPE@"]) as cursor:
-            for i, point in enumerate(shorePoints.values()):
+            for t_id_shore_id, point in shorePoints.items():
                 if isinstance(point, list): # The intersection point is a list of points (MultiPoint)
                     for part in point:
                         # Create the arcgis point
                         arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in part.coords][0]
                         # Insert the row with the transect_id and shore_id and the point
-                        cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arc_Point])
+                        cursor.insertRow([t_id_shore_id[0], t_id_shore_id[1], arc_Point])
                 else:
                     # Create the arcgis point
                     arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in point.coords][0]
                     # Insert the row with the transect_id and shore_id and the point
-                    cursor.insertRow([shore_keys[i][0], shore_keys[i][1], arc_Point])
+                    cursor.insertRow([t_id_shore_id[0], t_id_shore_id[1], arc_Point])
 
         # Add the other fields of the Polyline Shorelines Feature Class
         # Get the fields to join
