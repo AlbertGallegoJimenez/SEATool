@@ -210,6 +210,8 @@ class PlottingUtils():
             sns.regplot(x=X, y=y, ci=95, scatter=False, label='linear regression fit', ax=ax)
 
             # Plot settings
+            x_offset = abs(max(X) - min(X)) / 15
+            ax.set_xlim([min(X) - x_offset, max(X) + x_offset])
             ax.set_ylabel('Distance from\nbaseline (m)')
             ax.locator_params(axis='y', nbins=4)
             ax.set_title('Transect ' + str(t))
