@@ -70,26 +70,32 @@ class PlotResults(object):
         # Initialize the class
         plotter = PlottingUtils(transects=transectsFeature,
                                 shore_intersections=shoreFeatures)
+        try:
+            # Plot the spatial evolution
+            plotter.plot_spatial_evolution()
+        except Exception as e:
+            arcpy.AddError(f"An error occurred while plotting the spatial evolution: {e}")
         
-        # Plot the spatial evolution
-        plotter.plot_spatial_evolution()
-
-        # Plot the time series for the transects selected
-        plotter.plot_time_series(transects2plot=transectsID_2plot)
+        try:
+            # Plot the time series for the transects selected
+            plotter.plot_time_series(transects2plot=transectsID_2plot)
+        except Exception as e:
+            arcpy.AddError(f"An error occurred while plotting the time series: {e}")
 
         # Plot the seasonality for the transects selected.
-        # Set a minimum of 2 years of data to plot the seasonality.
-        if plotter.shore_intersections_df['date'].dt.year.max() - plotter.shore_intersections_df['date'].dt.year.min() >= 2:
-            plotter.plot_seasonality(transects2plot=transectsID_2plot)
+        try:
+            # Set a minimum of 2 years of data to plot the seasonality.
+            if plotter.shore_intersections_df['date'].dt.year.max() - plotter.shore_intersections_df['date'].dt.year.min() >= 2:
+                plotter.plot_seasonality(transects2plot=transectsID_2plot)
+        except Exception as e:
+            arcpy.AddError(f"An error occurred while plotting the seasonality: {e}")
 
-        # Plot the LRR map
-        plotter.plot_map('LRR')
-
-        # Plot the SCE map
-        plotter.plot_map('SCE')
-
-        # Plot the NSM map
-        plotter.plot_map('NSM')
+        for map_type in ['LRR', 'SCE', 'NSM']:
+            try:
+                # Plot the map for the transects selected
+                plotter.plot_map(map_type, transects2plot=transectsID_2plot)
+            except Exception as e:
+                arcpy.AddError(f"An error occurred while plotting the {map_type} map: {e}")
         
         arcpy.AddMessage("The analysis results have been plotted successfully.\n Please, check the 'Plots results' folder.")
 
