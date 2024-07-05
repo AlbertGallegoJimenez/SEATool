@@ -263,18 +263,17 @@ class PlottingUtils():
 
         shore_month = self.shore_intersections_df.copy()
         shore_month['month'] = shore_month['date'].dt.month
-        
-        # Check that all months are present in the data. If not, add one NaN value so the boxplot is created correctly.
-        for m in range(1, 13):
-            if m not in shore_month['month'].unique():
-                shore_month = shore_month.append({'month': m,
-                                                  'distance_from_base': np.nan}, ignore_index=True)
 
         fig, ax = plt.subplots(len(transects2plot), 1, figsize=(10, 4 * len(transects2plot)), sharex=True)
 
         for i, t in enumerate(transects2plot):
             # Grab the data
             data = shore_month.loc[shore_month['transect_id'] == t, ['month', 'distance_from_base']]
+            # Check that all months are present in the data. If not, add one NaN value so the boxplot is created correctly.
+            if len(data['month'].unique()) < 12:
+                for m in range(1, 13):
+                    if m not in data['month'].unique():
+                        data = pd.concat([data, pd.DataFrame({'month': [m], 'distance_from_base': [np.nan]})])
             
             # Median values Line plot
             ax[i].plot(data.groupby('month')['distance_from_base'].median(),
