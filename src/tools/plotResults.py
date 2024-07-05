@@ -93,7 +93,7 @@ class PlotResults(object):
         for map_type in ['LRR', 'SCE', 'NSM']:
             try:
                 # Plot the map for the transects selected
-                plotter.plot_map(map_type, transects2plot=transectsID_2plot)
+                plotter.plot_map(map_type)
             except Exception as e:
                 arcpy.AddError(f"An error occurred while plotting the {map_type} map: {e}")
         
