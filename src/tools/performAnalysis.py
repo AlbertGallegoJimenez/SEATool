@@ -99,10 +99,15 @@ class PerformAnalysis(object):
         create_new_fields(transectsFeature, metrics_fields, ['DOUBLE'] * len(metrics_fields))
 
         # Update the Transects Feature Class with the metrics
-        with arcpy.da.UpdateCursor(transectsFeature, metrics_fields) as cursor:
+        with arcpy.da.UpdateCursor(transectsFeature, ["transect_id"] + metrics_fields) as cursor:
             for i, _ in enumerate(cursor):
-                # Update the row with the metrics
-                cursor.updateRow(shore_metrics.loc[i, metrics_fields].tolist())
+                # Check if the transect ID is in the DataFrame (to handle the case where a transect has no intersections)
+                if cursor[0] in shore_metrics[transectsID].values:
+                    # Update the row with the metrics
+                    cursor.updateRow([cursor[0]] + shore_metrics.loc[i, metrics_fields].tolist())                   
+                else:
+                    # Update the row with NaN values
+                    cursor.updateRow([cursor[0]] + [np.nan] * len(metrics_fields))
 
         # Export the output CSVs
         self._export_output_data(shoreFeatures, transectsID, shore_metrics)
