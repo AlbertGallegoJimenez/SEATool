@@ -317,13 +317,17 @@ class PlottingUtils():
         # Iterate through transects and plot lines
         for i, t in self.transects_shapely.items():
             
-            # Check if Pvalue is less than 0.05 for significance
-            if self.transects_df.loc[self.transects_df['transect_id'] == i, 'Pvalue'].values <= 0.05:
+            if metric == 'LRR':
+                # Check if Pvalue is less than 0.05 for significance
+                if self.transects_df.loc[self.transects_df['transect_id'] == i, 'Pvalue'].values <= 0.05:
+                    color = cmap(norm(self.transects_df.loc[self.transects_df['transect_id'] == i, metric]))
+                    ls = '-'
+                else:
+                    color = 'gray'
+                    ls = '--'
+            else:
                 color = cmap(norm(self.transects_df.loc[self.transects_df['transect_id'] == i, metric]))
                 ls = '-'
-            else:
-                color = 'gray'
-                ls = '--'
             
             # Plot the transect line
             x, y = t.xy
@@ -371,5 +375,6 @@ class PlottingUtils():
         ax.set_ylim(y_lim)
         ax.set_xlabel('Eastings (m)')
         ax.set_ylabel('Northings (m)')
-        ax.legend(handles=[legend_entry], fontsize='small', loc='best')
+        if metric == 'LRR':
+            ax.legend(handles=[legend_entry], fontsize='small', loc='best')
         fig.savefig(os.path.join(self.out_dir, '{0}_transects.png'.format(metric)), dpi=300, bbox_inches='tight')
