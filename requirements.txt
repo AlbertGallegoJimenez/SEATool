@@ -1,4 +1,3 @@
-arcpy==3.2
 cartopy==0.22.0
 contextily==1.5.2
 matplotlib==3.6.3
