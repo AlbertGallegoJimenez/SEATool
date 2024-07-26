@@ -59,7 +59,7 @@ In terms of data, this tool relies on the use of the following two files:
 3. Open the Catalog Pane in ArcGIS Pro and add the Python Toolbox (.pyt) to see the tools.
 <div align="center">
   <a href="https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool">
-    <img src="images/open-toolbox.png" width="600" >
+    <img src="images/open-toolbox.png" width="800" >
   </a>
 </div>
 
