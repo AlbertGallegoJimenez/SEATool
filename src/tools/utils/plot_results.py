@@ -142,6 +142,12 @@ class PlottingUtils():
         # Set the x and y limits       
         x_lim = [min(lons) - x_offset, max(lons) + x_offset]
         y_lim = [min(lats) - y_offset, max(lats) + y_offset]
+        
+        # Determine if the map is oriented horizontally or vertically for further adjustments
+        if (x_lim[1] - x_lim[0]) > (y_lim[1] - y_lim[0]):
+            self.orientation = 'horizontal'
+        else:
+            self.orientation = 'vertical'
 
         return x_lim, y_lim
 
@@ -163,7 +169,7 @@ class PlottingUtils():
                 self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean(),
                 label='avg', color='#fa8174', lw=2, zorder=2)
         
-        # Plot mean +-2*std width value for each transect
+        # Plot mean +-std width value for each transect
         ax.fill_between(self.shore_intersections_df['transect_id'].unique(),
                         self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean()+\
                         1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
@@ -172,7 +178,7 @@ class PlottingUtils():
                         color='#bfbbd9', alpha=.5, lw=0, label='avg\u00B1std', zorder=0)
         
         # Plot settings
-        ax.set_xticks((np.arange(0, max(self.shore_intersections_df['transect_id']) + 2, 2)).tolist())
+        #ax.set_xticks((np.arange(0, max(self.shore_intersections_df['transect_id']) + 2, 2)).tolist())
         ax.set_xlabel('Transect id')
         ax.set_ylabel('Distance from baseline (m)')
         ax.set_xlim([-1, max(self.shore_intersections_df['transect_id']) + 2])
@@ -310,6 +316,17 @@ class PlottingUtils():
         # Set projection parameter
         UTM_number, southern_hemisphere = self._get_UTM_projection()
         proj = ccrs.UTM(UTM_number, southern_hemisphere=southern_hemisphere)
+        
+        # Set x, y limits for the plot
+        x_lim, y_lim = self._set_xylim(self.transects_shapely)
+        
+        # Set every how many transects to display the labels (transect ID)
+        if len(self.transects_shapely) < 10:
+            step = 1
+        elif len(self.transects_shapely) < 50:
+            step = 2
+        else:
+            step = 5
 
         # Create a subplot with UTM projection
         fig, ax = plt.subplots(subplot_kw={'projection':proj})
@@ -337,15 +354,14 @@ class PlottingUtils():
                     lw=3,
                     ls=ls)
             
-            # Add labels every two transects
-            if i % 2 == 0:
+            # Add labels every 'step' transects
+            if i % step == 0:
                 x_cent, y_cent = t.centroid.xy
                 ax.text(x_cent[0], y_cent[0], str(i), color='black', transform=proj, fontsize='x-small',
                         ha='center', va='center', path_effects=[pe.withStroke(linewidth=2, foreground='white')])
 
         # Create a legend entry for non-significant transects
         legend_entry = mlines.Line2D([], [], color='gray', lw=2, ls='--', label='Non-significant transect')
-
 
         # Customize gridlines, ticks, and appearance
         ax.gridlines(crs=proj, linewidth=1, color='black', alpha=0, linestyle="--")
@@ -369,8 +385,6 @@ class PlottingUtils():
             cx.add_basemap(ax, crs=proj, source=cx.providers.Esri.WorldImagery, alpha=.7, attribution_size=6)
         except:
             arcpy.AddMessage("Basemap could not be added to the {}_transect.png map.".format(metric))
-            
-        x_lim, y_lim = self._set_xylim(self.transects_shapely)
         ax.set_xlim(x_lim)
         ax.set_ylim(y_lim)
         ax.set_xlabel('Eastings (m)')
