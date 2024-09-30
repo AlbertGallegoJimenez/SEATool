@@ -162,12 +162,12 @@ class PlottingUtils():
         # Plot all values as scatter
         ax.scatter(self.shore_intersections_df['transect_id'],
                    self.shore_intersections_df['distance_from_base'],
-                   alpha=.1, lw=0, zorder=1)
+                   color='#5B9CFD', alpha=.1, lw=0, zorder=1)
 
         # Plot average width value for each transect
         ax.plot(self.shore_intersections_df['transect_id'].unique(),
                 self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean(),
-                label='avg', color='#fa8174', lw=2, zorder=2)
+                label='avg', color='#FECB31', lw=2, zorder=2)
         
         # Plot mean +-std width value for each transect
         ax.fill_between(self.shore_intersections_df['transect_id'].unique(),
@@ -175,7 +175,7 @@ class PlottingUtils():
                         1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
                         self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean()-\
                         1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
-                        color='#bfbbd9', alpha=.5, lw=0, label='avg\u00B1std', zorder=0)
+                        color='#5B9CFD', alpha=.5, lw=0, label='avg\u00B1std', zorder=0) #color='#bfbbd9'
         
         # Plot settings
         #ax.set_xticks((np.arange(0, max(self.shore_intersections_df['transect_id']) + 2, 2)).tolist())
