@@ -11,7 +11,7 @@
     <img src="images/logo-tool.png" alt="Logo" width="270" height="200">
   </a>
 
-<h3 align="center">SEATool (Shoreline Evolution Analysis Toolbox)</h3>
+<h3 align="center">SEATool (Shoreline Evolution Analysis Toolbox) 🌊🛰️</h3>
 
   <p align="center">
     This repository houses a set of tools that allow the user to perform simple and automated regression analysis of a given coastal zone, all integrated into ArcGIS Pro.
