@@ -382,7 +382,7 @@ class PlottingUtils():
 
         # Set limits, labels, legend, and save the figure
         try:
-            cx.add_basemap(ax, crs=proj, source=cx.providers.Esri.WorldImagery, alpha=.7, attribution_size=6)
+            cx.add_basemap(ax, crs=proj, source=cx.providers.Esri.WorldImagery, alpha=.7, attribution=False)
         except:
             arcpy.AddMessage("Basemap could not be added to the {}_transect.png map.".format(metric))
         ax.set_xlim(x_lim)
