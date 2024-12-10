@@ -51,7 +51,7 @@ In terms of data, this tool relies on the use of the following two files:
 0. Make sure you have cloned the base ArcGIS Anaconda environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
 1. Clone this repo on your computer.
 2. Check that you have installed all the required libraries used in the toolbox. All packages with their tested versions are listed in [requirements.txt](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/requirements.txt). To install the packages, follow these steps:
-   1. Open an Anaconda terminal and activate the cloned version of the ArcGIS Anaconda environment. (_If you don't have Anaconda installed on your computer, you can try to open the ArcGIS terminal located in "C:\Program Files\ArcGIS\Pro\bin\Python\Scripts\proenv.bat"_)
+   1. Open an Anaconda terminal and activate the cloned version of the ArcGIS Anaconda environment. (_If you don't have Anaconda installed on your computer, you can try to open the ArcGIS terminal located in "C:\Program Files\ArcGIS\Pro\bin\Python\Scripts\proenv.bat" or just type "Python Command Prompt" in the Windows search box and open this terminal_)
    2. Navigate to the main directory of your local clone of the repo and install the packages via pip:
       ``` shell
         pip install -r requirements.txt
