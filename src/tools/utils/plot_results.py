@@ -212,12 +212,16 @@ class PlottingUtils():
             y = data_transect.loc[:, 'distance_from_base']  # target
 
             # Plot time series
-            ax.plot(X, y.values, linestyle='-', marker='o', markersize=2, label='shoreline positions')
+            ax.scatter(X, y.values, label='shoreline positions')
             sns.regplot(x=X, y=y, ci=95, scatter=False, label='linear regression fit', ax=ax)
 
             # Plot settings
-            x_offset = abs(max(X) - min(X)) / 15
-            ax.set_xlim([min(X) - x_offset, max(X) + x_offset])
+            xticks = ax.get_xticks().tolist()
+            xticks.pop(0)
+            xticks.pop(-1)
+            labels = [pd.Timestamp.fromordinal(int(label)).date().strftime("%Y") for label in xticks]
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(labels)
             ax.set_ylabel('Distance from\nbaseline (m)')
             ax.locator_params(axis='y', nbins=4)
             ax.set_title('Transect ' + str(t))
