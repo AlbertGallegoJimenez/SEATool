@@ -102,8 +102,17 @@ class PlotResults(object):
             except Exception as e:
                 arcpy.AddError(f"An error occurred while plotting the {metric} bar chart: {e}")
         
-        arcpy.AddMessage("The analysis results have been plotted successfully.\n Please, check the 'Plots results' folder.")
+        arcpy.AddMessage("The analysis results have been plotted successfully.\nPlease, check the 'Plots results' folder.")
 
+        # Add a bar chart to the transects layer displaying the LRR values.
+        aprx = arcpy.mp.ArcGISProject("CURRENT")
+        map = aprx.activeMap
+        transects_layer = [layer for layer in map.listLayers() if layer.name == transectsFeature][0]
+        chart = arcpy.charts.Bar(x="transect_id", y="LRR",
+                                 title="LRR by transects",
+                                 xTitle="Transect id", yTitle="LRR (m)")
+        chart.addToLayer(transects_layer)
+        
         return
 
     def postExecute(self, parameters):
