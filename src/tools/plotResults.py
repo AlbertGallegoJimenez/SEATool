@@ -90,12 +90,17 @@ class PlotResults(object):
         except Exception as e:
             arcpy.AddError(f"An error occurred while plotting the seasonality: {e}")
 
-        for map_type in ['LRR', 'SCE', 'NSM']:
+        for metric in ['LRR', 'SCE', 'NSM']:
             try:
-                # Plot the map for the transects selected
-                plotter.plot_map(map_type)
+                # Plot the map
+                plotter.plot_map(metric)
             except Exception as e:
-                arcpy.AddError(f"An error occurred while plotting the {map_type} map: {e}")
+                arcpy.AddError(f"An error occurred while plotting the {metric} map: {e}")
+            try:
+                # Plot the bar chart
+                plotter.plot_bar_chart(metric)
+            except Exception as e:
+                arcpy.AddError(f"An error occurred while plotting the {metric} bar chart: {e}")
         
         arcpy.AddMessage("The analysis results have been plotted successfully.\n Please, check the 'Plots results' folder.")
 

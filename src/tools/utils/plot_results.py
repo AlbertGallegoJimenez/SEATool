@@ -21,6 +21,8 @@ plt.rcParams['grid.linestyle'] = '--'
 plt.rcParams['grid.linewidth'] = 0.5
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['#5B9CFD', '#FECB31', '#bfbbd9', '#fa8174', '#81b1d2',
                                                     '#fdb462', '#b3de69', '#bc82bd', '#ccebc4', '#ffed6f'])
+# Get the color palette
+palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 class PlottingUtils():
     def __init__(self, transects, shore_intersections):
@@ -219,8 +221,9 @@ class PlottingUtils():
             y = data_transect.loc[:, 'distance_from_base']  # target
 
             # Plot time series
-            ax.scatter(X, y.values, label='shoreline positions')
-            sns.regplot(x=X, y=y, ci=95, scatter=False, label='linear regression fit', ax=ax)
+            ax.scatter(X, y.values, label='shoreline positions', color=palette[0])
+            sns.regplot(x=X, y=y, ci=95, scatter=False, label='linear regression fit',
+                        line_kws={"color": palette[1]}, ax=ax)
 
             # Plot settings
             xticks = ax.get_xticks().tolist()
@@ -416,4 +419,52 @@ class PlottingUtils():
         ax.set_ylabel('Northings (m)')
         if metric == 'LRR':
             ax.legend(handles=[legend_entry], fontsize='small', loc='best')
-        fig.savefig(os.path.join(self.out_dir, '{0}_transects.png'.format(metric)), dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(self.out_dir, 'map_{0}_transects.png'.format(metric)), dpi=300, bbox_inches='tight')
+
+    def plot_bar_chart(self, metric):
+        """
+        Plot a bar chart of the selected metric (LRR, SCE or NSM).
+        
+        Parameters:
+            metric (string): Name of the feature to plot.
+        
+        Returns:
+            None
+        """
+        # Set the cmap, norm and the type of cbar of the plot
+        cmap, norm, extend_cbar = self._set_map_configuration(metric)
+        
+        fig, ax = plt.subplots(figsize=(12, 5))
+        # Plot the bar chart
+        ax.bar(self.transects_df['transect_id'], self.transects_df[metric],
+               color=cmap(norm(self.transects_df[metric])),
+               lw=0)
+        # Change the color of the bars for non-significant transects
+        if metric == 'LRR':
+            for i, p in enumerate(ax.patches):
+                if self.transects_df.loc[self.transects_df['transect_id'] == i, 'Pvalue'].values > 0.05:
+                    p.set_color('gray')
+        # Create a legend entry for non-significant transects
+        legend_entry = mlines.Line2D([], [], color='gray', lw=2, label='Non-significant transect')
+        # Add colorbar, set title and labels
+        if self.transects_df['Pvalue'].min() <= 0.05:
+            # shrink to 0.5 the colorbar
+            fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), extend=extend_cbar, ax=ax, shrink=0.5)
+        if metric == 'LRR':
+            ax.legend(handles=[legend_entry], fontsize='small', loc='best')
+            ax.set_title('Linear Regression Rate, LRR (m/year)', y=1.05)
+            ax.set_ylabel('LRR (m/year)')
+        elif metric == 'SCE':
+            ax.set_title('Shoreline Change Envelope, SCE (m)', y=1.05)
+            ax.set_ylabel('SCE (m)')
+        elif metric == 'NSM':
+            ax.set_title('Net Shoreline Movement, NSM (m)', y=1.05)
+            ax.set_ylabel('NSM (m)')
+        # Set the x-axis limits
+        ax.set_xlim([-1, max(self.transects_df['transect_id']) + 2])
+        # Set the grid
+        ax.grid(linestyle='--', alpha=0.3)
+        # Set labels and save the figure
+        ax.set_xlabel('Transect id')
+        # Save the figure
+        fig.savefig(os.path.join(self.out_dir, 'bar_{0}_transects.png'.format(metric)), dpi=300, bbox_inches='tight')
