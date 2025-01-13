@@ -155,7 +155,7 @@ class PlottingUtils():
      #  ===== FROM HERE, ALL THE FUNCTIONS TO CREATE THE PLOTS ARE DEFINED =====
   
     def plot_spatial_evolution(self):
-        # Plot the distances between all shorelines and the baseline on each transect
+        """Plot the distances between all shorelines and the baseline on each transect"""
         
         fig, ax = plt.subplots(figsize=(12, 5))
 
@@ -192,8 +192,15 @@ class PlottingUtils():
 
 
     def plot_time_series(self, transects2plot):
-        # Plot time series for selected transects
-
+        """
+        Plot time series for selected transects.
+        
+        Parameters:
+            transects2plot (list): List of transect IDs to plot
+            
+        Returns:
+            None
+        """
         fig = plt.figure(figsize=(12, 2 * len(transects2plot)))
         gs = GridSpec(len(transects2plot), 7, figure=fig)
         
@@ -269,8 +276,15 @@ class PlottingUtils():
 
 
     def plot_seasonality(self, transects2plot):
-        # Boxplot by months for selected transects
-
+        """
+        Boxplot by months for selected transects
+        
+        Parameters:
+            transects2plot (list): List of transect IDs to plot
+            
+        Returns:
+            None
+        """
         shore_month = self.shore_intersections_df.copy()
         shore_month['month'] = shore_month['date'].dt.month
 
@@ -312,8 +326,15 @@ class PlottingUtils():
 
 
     def plot_map(self, metric):
-        # Plot a map of the selected metric (LRR, SCE or NSM)
-
+        """
+        Plot a map of the selected metric (LRR, SCE or NSM).
+        
+        Parameters:
+            metric (string): Name of the feature to plot.
+        
+        Returns:
+            None
+        """
         # Set the cmap, norm and the type of cbar of the plot
         cmap, norm, extend_cbar = self._set_map_configuration(metric)
         
