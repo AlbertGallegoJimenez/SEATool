@@ -203,7 +203,7 @@ class PlottingUtils():
         Returns:
             None
         """
-        fig = plt.figure(figsize=(12, 2 * len(transects2plot)))
+        fig = plt.figure(figsize=(10, 2 * len(transects2plot)))
         gs = GridSpec(len(transects2plot), 7, figure=fig)
         
         # Variable to hold reference to the first x-axis created
@@ -434,7 +434,7 @@ class PlottingUtils():
         # Set the cmap, norm and the type of cbar of the plot
         cmap, norm, extend_cbar = self._set_map_configuration(metric)
         
-        fig, ax = plt.subplots(figsize=(12, 5))
+        fig, ax = plt.subplots(figsize=(10, 4))
         # Plot the bar chart
         ax.bar(self.transects_df['transect_id'], self.transects_df[metric],
                color=cmap(norm(self.transects_df[metric])),
@@ -442,14 +442,11 @@ class PlottingUtils():
         # Change the color of the bars for non-significant transects
         if metric == 'LRR':
             for i, p in enumerate(ax.patches):
-                if self.transects_df.loc[self.transects_df['transect_id'] == i, 'Pvalue'].values > 0.05:
+                if self.transects_df.loc[self.transects_df['transect_id'] == (i + 1), 'Pvalue'].values > 0.05:
                     p.set_color('gray')
         # Create a legend entry for non-significant transects
         legend_entry = mlines.Line2D([], [], color='gray', lw=2, label='Non-significant transect')
-        # Add colorbar, set title and labels
-        if self.transects_df['Pvalue'].min() <= 0.05:
-            # shrink to 0.5 the colorbar
-            fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), extend=extend_cbar, ax=ax, shrink=0.5)
+        # Set title and labels
         if metric == 'LRR':
             ax.legend(handles=[legend_entry], fontsize='small', loc='best')
             ax.set_title('Linear Regression Rate, LRR (m/year)', y=1.05)
@@ -460,8 +457,12 @@ class PlottingUtils():
         elif metric == 'NSM':
             ax.set_title('Net Shoreline Movement, NSM (m)', y=1.05)
             ax.set_ylabel('NSM (m)')
-        # Set the x-axis limits
+        # Get the x-axis ticks
+        xticks = ax.get_xticks().tolist()
+        xticks.pop(-1)
+        # Set the x-axis limits and ticks
         ax.set_xlim([-1, max(self.transects_df['transect_id']) + 2])
+        ax.set_xticks(xticks)
         # Set the grid
         ax.grid(linestyle='--', alpha=0.3)
         # Set labels and save the figure
