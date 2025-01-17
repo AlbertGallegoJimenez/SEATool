@@ -172,13 +172,18 @@ class PerformAnalysis(object):
         # Set the label for the symbolised field
         cim.renderer.heading = 'LRR (m/year)'
 
-        # Exclude non-significant transects and apply unique symbology
+        # Exclude non-significant transects and apply unique symbology (grey dashed line)
         cim.renderer.useExclusionSymbol = True
         cim.renderer.exclusionClause = 'Pvalue > 0.05'
         cim.renderer.exclusionLabel = 'Non-significant transect'
         cim.renderer.exclusionSymbol.symbol.symbolLayers[0].color.values = [130, 130, 130, 100] # Grey color
         cim.renderer.exclusionSymbol.symbol.symbolLayers[0].width = 1.5
-        
+        cim.renderer.exclusionSymbol.symbol.symbolLayers[0].effects = [{
+                    "type" : "CIMGeometricEffectDashes",
+                    "dashTemplate" : [5, 5],
+                    "lineDashEnding" : "NoConstraint",
+                    "controlPointEnding" : "NoConstraint"
+                  }]
         # Update the CIM
         transectsLayerObj.setDefinition(cim)
         
