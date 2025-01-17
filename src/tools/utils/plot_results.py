@@ -8,6 +8,7 @@ import re
 import contextily as cx
 import cartopy.crs as ccrs
 from tools.utils.generic_funs import line_arcgis2shapely
+from matplotlib.patches import Patch
 import matplotlib.patheffects as pe
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.cm import ScalarMappable
@@ -108,7 +109,7 @@ class PlottingUtils():
         metric_min, metric_max = self.transects_df[metric].describe()[['min', 'max']]
 
         if metric_min < 0 and metric_max > 0:
-            cmap = plt.get_cmap('RdBu')
+            cmap = plt.get_cmap('RdYlBu')
             norm = TwoSlopeNorm(vmin=metric_min, vcenter=0, vmax=metric_max)
             extend_cbar = 'both'
         elif metric_min < 0 and metric_max < 0:
@@ -181,7 +182,7 @@ class PlottingUtils():
         
         # Plot settings
         #ax.set_xticks((np.arange(0, max(self.shore_intersections_df['transect_id']) + 2, 2)).tolist())
-        ax.set_xlabel('Transect id')
+        ax.set_xlabel('Transect ID')
         ax.set_ylabel('Distance from baseline (m)')
         ax.set_xlim([-1, max(self.shore_intersections_df['transect_id']) + 2])
         plt.text(-0.05, 0.9, 'Seaward', transform=plt.gca().transAxes, horizontalalignment='right', fontstyle='italic')
@@ -190,7 +191,7 @@ class PlottingUtils():
         ax.legend()
         ax.set_title('Spatial shoreline evolution (%.f - %.f)' % (self.shore_intersections_df['date'].min().year,
                                                                   self.shore_intersections_df['date'].max().year))
-        fig.savefig(os.path.join(self.out_dir, 'Spatial shoreline evolution.png'), dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(self.out_dir, 'spatial_shoreline_evolution.png'), dpi=300, bbox_inches='tight')
 
 
     def plot_time_series(self, transects2plot):
@@ -275,7 +276,7 @@ class PlottingUtils():
             
             plt.subplots_adjust(hspace=0.4, wspace=1)
         
-        fig.savefig(os.path.join(self.out_dir, 'Time shoreline evolution.png'), bbox_inches='tight', dpi=300)
+        fig.savefig(os.path.join(self.out_dir, 'time_shoreline_evolution.png'), bbox_inches='tight', dpi=300)
 
 
     def plot_seasonality(self, transects2plot):
@@ -325,7 +326,7 @@ class PlottingUtils():
                 
         fig.suptitle(None)
         plt.subplots_adjust(hspace=0.2)
-        fig.savefig(os.path.join(self.out_dir, 'Shoreline evolution seasonality.png'), dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(self.out_dir, 'shoreline_evolution_seasonality.png'), dpi=300, bbox_inches='tight')
 
 
     def plot_map(self, metric):
@@ -432,7 +433,7 @@ class PlottingUtils():
             None
         """
         # Set the cmap, norm and the type of cbar of the plot
-        cmap, norm, extend_cbar = self._set_map_configuration(metric)
+        cmap, norm, _ = self._set_map_configuration(metric)
         
         fig, ax = plt.subplots(figsize=(10, 4))
         # Plot the bar chart
@@ -466,6 +467,64 @@ class PlottingUtils():
         # Set the grid
         ax.grid(linestyle='--', alpha=0.3)
         # Set labels and save the figure
-        ax.set_xlabel('Transect id')
+        ax.set_xlabel('Transect ID')
         # Save the figure
         fig.savefig(os.path.join(self.out_dir, 'bar_{0}_transects.png'.format(metric)), dpi=300, bbox_inches='tight')
+
+    def plot_spatiotemporal_chart(self):
+        """
+        Plot a spatiotemporal chart (similar to a heatmap or Hövmoller plot).
+        """
+        # Calculate the difference in days between each date and the first date
+        self.shore_intersections_df["days"] = (
+            self.shore_intersections_df["date"] -
+            self.shore_intersections_df["date"].min()
+            ).dt.days
+        
+        # Create a pivot table with the distance_from_base values
+        pivot_table = self.shore_intersections_df.pivot_table(
+            index='transect_id',
+            columns='days',
+            values='distance_from_base'
+            )
+        
+        # Calculate the anomaly of the distance_from_base values
+        mean_distance = pivot_table.mean(axis=1) # Mean value for each transect
+        anomaly = pivot_table.subtract(mean_distance, axis=0)
+        
+        # Set the gradient values for the plot
+        vmin, vmax = np.nanmin(anomaly.values), np.nanmax(anomaly.values)
+        norm = TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
+        
+        # Create the figure
+        fig, ax = plt.subplots(figsize=(12, 5))
+        # Plot a gray background for the gaps in the data
+        ax.contourf(anomaly.columns, anomaly.index, anomaly.isnull(),
+                    levels=0, colors='gray', alpha=0.3)
+        # Plot the anomaly values
+        ax.contourf(anomaly.columns, anomaly.index, anomaly,
+                    levels=8, cmap='RdYlBu',
+                    norm=norm, extend='both')
+        # Change the y-axis to start from the bottom
+        ax.invert_yaxis()
+        # Add 1 to the y-axis to match the transect_id
+        yticks = plt.gca().get_yticks().tolist()
+        yticks = [int(ytick) + 1 for ytick in yticks]
+        # Add a colorbar
+        plt.colorbar(ScalarMappable(norm=norm, cmap='RdYlBu'), ax=ax)
+        # Substitute the days in the x-axis for the actual dates in year-month format
+        xticks = ax.get_xticks().tolist()
+        xticks.pop(-1)
+        xticklabels = pd.to_datetime(self.shore_intersections_df['date'].min()) + pd.to_timedelta(xticks, unit='D')
+        ax.set_xticks(xticks, xticklabels.strftime('%Y-%m'), rotation=0)
+        # Add a legend for the gray values
+        gray_patch = Patch(color='gray', alpha=0.3, label='No data')
+        ax.legend(handles=[gray_patch], loc='upper right')
+        # Set the grid
+        ax.grid(linestyle='--', alpha=0.3)
+        # Set the axis and title labels
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Transect ID')
+        ax.set_title('Spatiotemporal shoreline evolution anomaly (m)')
+        # Save the figure
+        fig.savefig(os.path.join(self.out_dir, 'spatiotemporal_shoreline_evolution.png'), dpi=300, bbox_inches='tight')
