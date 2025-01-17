@@ -146,16 +146,16 @@ class PerformAnalysis(object):
         sym.renderer.classificationField = 'LRR'
 
         # Set the number of class breaks
-        sym.renderer.breakCount = 6
+        sym.renderer.breakCount = 7
 
         # Define upper bound values for each class break
-        upperBoundValues = [-4, -2, 0, 2, 4, 50]
+        upperBoundValues = [-4, -2, -0.5, 0.5, 2, 4, 100]
 
         # Define labels for each class
-        labels = ["-50.0 - -4.0", "-4.0 - -2.0", "-2.0 - 0.0", "0.0 - 2.0", "2.0 - 4.0", "4.0 - 50.0"]
+        labels = ["MIN - -4.0", "-4.0 - -2.0", "-2.0 - -0.5", "-0.5 - 0.5", "0.5 - 2.0", "2.0 - 4.0", "4.0 - MAX"]
 
         # Define sizes for each class
-        sizes = [6, 3, 1.5, 1.5, 3, 6]
+        sizes = [6, 3, 1.5, 1, 1.5, 3, 6]
 
         # Update values for each class
         for i, brk in enumerate(sym.renderer.classBreaks):
@@ -176,7 +176,7 @@ class PerformAnalysis(object):
         cim.renderer.useExclusionSymbol = True
         cim.renderer.exclusionClause = 'Pvalue > 0.05'
         cim.renderer.exclusionLabel = 'Non-significant transect'
-        cim.renderer.exclusionSymbol.symbol.symbolLayers[0].color.values = [130, 130, 130, 100]
+        cim.renderer.exclusionSymbol.symbol.symbolLayers[0].color.values = [130, 130, 130, 100] # Grey color
         cim.renderer.exclusionSymbol.symbol.symbolLayers[0].width = 1.5
         
         # Update the CIM
