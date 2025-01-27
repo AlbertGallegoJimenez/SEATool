@@ -445,11 +445,13 @@ class PlottingUtils():
             for i, p in enumerate(ax.patches):
                 if self.transects_df.loc[self.transects_df['transect_id'] == (i + 1), 'Pvalue'].values > 0.05:
                     p.set_color('gray')
-        # Create a legend entry for non-significant transects
-        legend_entry = mlines.Line2D([], [], color='gray', lw=2, label='Non-significant transect')
         # Set title and labels
         if metric == 'LRR':
-            ax.legend(handles=[legend_entry], fontsize='small', loc='best')
+            # Check if there's any transect with Pvalue more than 0.05
+            if self.transects_df['Pvalue'].max() > 0.05:
+                # Create a legend entry for non-significant transects
+                legend_entry = mlines.Line2D([], [], color='gray', lw=2, label='Non-significant transect')
+                ax.legend(handles=[legend_entry], fontsize='small', loc='best')
             ax.set_title('Linear Regression Rate, LRR (m/year)', y=1.05)
             ax.set_ylabel('LRR (m/year)')
         elif metric == 'SCE':
