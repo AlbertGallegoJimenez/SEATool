@@ -488,21 +488,31 @@ class PlottingUtils():
             values='distance_from_base'
             )
         
-        # Calculate the anomaly of the distance_from_base values
-        mean_distance = pivot_table.mean(axis=1) # Mean value for each transect
-        anomaly = pivot_table.subtract(mean_distance, axis=0)
+        # Calculate the difference of the distance_from_base values with the first date
+        # Create a method to get the first position with a threshold of 95% of data
+        def get_first_position(pivot_table, threshold=0.95):
+            for i in range(pivot_table.shape[1]):
+                if pivot_table.iloc[:, i].notna().sum().sum() / pivot_table.shape[0] > threshold:
+                    return i
+            return 0
+        first_position = get_first_position(pivot_table, 0.95)
+        # Print a message with the first date selected
+        arcpy.AddMessage(f"First date selected for the spatiotemporal chart: {self.shore_intersections_df['date'].min() + pd.to_timedelta(first_position, unit='D')}")
+        # Calculate the difference values with the first date
+        first_distance = pivot_table.iloc[:, first_position]
+        first_dist_diff = pivot_table.subtract(first_distance, axis=0)
         
         # Set the gradient values for the plot
-        vmin, vmax = np.nanmin(anomaly.values), np.nanmax(anomaly.values)
+        vmin, vmax = np.nanmin(first_dist_diff.values), np.nanmax(first_dist_diff.values)
         norm = TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
         
         # Create the figure
         fig, ax = plt.subplots(figsize=(12, 5))
         # Plot a gray background for the gaps in the data
-        ax.contourf(anomaly.columns, anomaly.index, anomaly.isnull(),
+        ax.contourf(first_dist_diff.columns, first_dist_diff.index, first_dist_diff.isnull(),
                     levels=0, colors='gray', alpha=0.3)
-        # Plot the anomaly values
-        ax.contourf(anomaly.columns, anomaly.index, anomaly,
+        # Plot the first_dist_diff values
+        ax.contourf(first_dist_diff.columns, first_dist_diff.index, first_dist_diff,
                     levels=8, cmap='RdYlBu',
                     norm=norm, extend='both')
         # Change the y-axis to start from the bottom
@@ -525,6 +535,6 @@ class PlottingUtils():
         # Set the axis and title labels
         ax.set_xlabel('Date')
         ax.set_ylabel('Transect ID')
-        ax.set_title('Spatiotemporal shoreline evolution anomaly (m)')
+        ax.set_title('Shoreline position difference from the first date')
         # Save the figure
         fig.savefig(os.path.join(self.out_dir, 'spatiotemporal_shoreline_evolution.png'), dpi=300, bbox_inches='tight')
