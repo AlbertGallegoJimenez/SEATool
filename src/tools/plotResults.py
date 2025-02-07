@@ -153,10 +153,11 @@ class PlotResults(object):
             raise Exception('Some transects are repeated.')
         
         # Check if the user only has selected one transect
+        """
         if len(transectsID_2plot) == 1:
             arcpy.AddError('Please, select more than one transect to plot.')
             raise Exception('Please, select more than one transect to plot.')
-        
+        """
         # Check for ID out of range
         list_transect_id = [row[0] for row in arcpy.da.SearchCursor(transectsFeature, ['transect_id'])]
         if set(transectsID_2plot) - set(list_transect_id):
