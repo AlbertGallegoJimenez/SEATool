@@ -241,7 +241,10 @@ class PlottingUtils():
             if first_x_axis is None:
                 first_x_axis = ax
             else:
-                ax.get_shared_x_axes().join(first_x_axis, ax)
+                try:
+                    ax.get_shared_x_axes().join(first_x_axis, ax)
+                except Exception as e:
+                    pass
 
             # Plot LRR error plot
             ax2 = fig.add_subplot(gs[i, -1:])
