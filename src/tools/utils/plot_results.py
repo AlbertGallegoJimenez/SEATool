@@ -352,13 +352,8 @@ class PlottingUtils():
         # Set x, y limits for the plot
         x_lim, y_lim = self._set_xylim(self.transects_shapely)
         
-        # Set every how many transects to display the labels (transect ID)
-        if len(self.transects_shapely) < 10:
-            step = 1
-        elif len(self.transects_shapely) < 50:
-            step = 2
-        else:
-            step = 5
+        # Calculate optimal step for transect labels based on spatial distribution
+        step = self._calculate_optimal_label_step(x_lim, y_lim)
 
         # Create a subplot with UTM projection
         fig, ax = plt.subplots(subplot_kw={'projection':proj})
@@ -389,7 +384,7 @@ class PlottingUtils():
             # Add labels every 'step' transects
             if i % step == 0:
                 x_cent, y_cent = t.centroid.xy
-                ax.text(x_cent[0], y_cent[0], str(i), color='black', transform=proj, fontsize='x-small',
+                ax.text(x_cent[0], y_cent[0], str(i), color='black', transform=proj, fontsize=6,
                         ha='center', va='center', path_effects=[pe.withStroke(linewidth=2, foreground='white')])
 
         # Create a legend entry for non-significant transects
@@ -543,3 +538,63 @@ class PlottingUtils():
         ax.set_title('Shoreline position difference from the first date')
         # Save the figure
         fig.savefig(os.path.join(self.out_dir, 'spatiotemporal_shoreline_evolution.png'), dpi=300, bbox_inches='tight')
+
+    def _calculate_optimal_label_step(self, x_lim, y_lim):
+        """
+        Private method to calculate the optimal step for transect labels based on 
+        spatial distribution and map dimensions.
+
+        Parameters:
+            x_lim (list): List with the starting and ending x limits.
+            y_lim (list): List with the starting and ending y limits.
+
+        Returns:
+            step (int): Optimal step size for displaying transect labels.
+        """
+        # Get transect centroids in order
+        transect_ids = sorted(self.transects_shapely.keys())
+        centroids = []
+        
+        for transect_id in transect_ids:
+            t = self.transects_shapely[transect_id]
+            x_cent, y_cent = t.centroid.xy
+            centroids.append((x_cent[0], y_cent[0]))
+        
+        # Calculate distances between consecutive transect centroids
+        if len(centroids) < 2:
+            return 1  # Only one transect, show label
+        
+        distances = []
+        for i in range(len(centroids) - 1):
+            dist = np.sqrt((centroids[i+1][0] - centroids[i][0])**2 + 
+                          (centroids[i+1][1] - centroids[i][1])**2)
+            distances.append(dist)
+        
+        # Calculate average distance between consecutive transects
+        avg_centroid_distance = np.mean(distances) if distances else 0
+        
+        # Estimate label size based on map dimensions
+        map_width = x_lim[1] - x_lim[0]
+        map_height = y_lim[1] - y_lim[0]
+        min_map_dimension = min(map_width, map_height)
+        
+        # Estimate label size as 2% of the smaller map dimension
+        estimated_label_size = min_map_dimension * 0.02
+        
+        # Add some padding to prevent label overlap
+        min_safe_distance = estimated_label_size * 5
+        
+        # Calculate optimal step
+        if avg_centroid_distance > 0 and avg_centroid_distance < min_safe_distance:
+            step = max(1, int(np.ceil(min_safe_distance / avg_centroid_distance)))
+        else:
+            step = 1  # Labels won't overlap with current spacing
+        
+        # Apply reasonable bounds and fallback logic
+        if step > 10:  # Maximum step to ensure some labels are shown
+            step = max(1, len(self.transects_shapely) // 20)  # Show ~5% of transects
+        
+        # Ensure minimum of 1 and maximum reasonable step
+        step = max(1, min(step, 10))
+        
+        return step
