@@ -512,7 +512,7 @@ class PlottingUtils():
         ax.contourf(first_dist_diff.columns, first_dist_diff.index, first_dist_diff.isnull(),
                     levels=0, colors='gray', alpha=0.3)
         # Plot the first_dist_diff values
-        ax.contourf(first_dist_diff.columns, first_dist_diff.index, first_dist_diff,
+        cs = ax.contourf(first_dist_diff.columns, first_dist_diff.index, first_dist_diff,
                     levels=8, cmap='RdYlBu',
                     norm=norm, extend='both')
         # Change the y-axis to start from the bottom
@@ -520,8 +520,8 @@ class PlottingUtils():
         # Add 1 to the y-axis to match the transect_id
         yticks = plt.gca().get_yticks().tolist()
         yticks = [int(ytick) + 1 for ytick in yticks]
-        # Add a colorbar
-        plt.colorbar(ScalarMappable(norm=norm, cmap='RdYlBu'), ax=ax)
+        # Add a colorbar that matches the discrete levels
+        plt.colorbar(cs, ax=ax)
         # Substitute the days in the x-axis for the actual dates in year-month format
         xticks = ax.get_xticks().tolist()
         xticks.pop(-1)
