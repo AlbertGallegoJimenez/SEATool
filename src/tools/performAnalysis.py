@@ -73,7 +73,7 @@ class PerformAnalysis(object):
 
         # Perform the Linear Regression Analysis on each transect
         # Calculate the metrics of the Linear Regression Fit
-        shore_metrics = pd.DataFrame({transectsID: np.arange(1, df[transectsID].max() + 1, 1)})
+        shore_metrics = pd.DataFrame({transectsID: sorted(df[transectsID].unique())})
         # LRR: Linear Regression Rate and Confidence Intervals
         shore_metrics[["LRR", "LCI_low", "LCI_upp"]] = shore_metrics[transectsID].apply(
             lambda x: pd.Series(ShorelineEvolution(df=df, transect_id=x).LRR()))
@@ -183,7 +183,7 @@ class PerformAnalysis(object):
                     "dashTemplate" : [5, 5],
                     "lineDashEnding" : "NoConstraint",
                     "controlPointEnding" : "NoConstraint"
-                  }]
+                    }]
         # Update the CIM
         transectsLayerObj.setDefinition(cim)
         
