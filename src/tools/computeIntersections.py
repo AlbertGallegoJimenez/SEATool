@@ -103,8 +103,22 @@ class ComputeIntersection(object):
         shoreOutFeature = parameters[5].valueAsText
 
         #  == Convert ArcGIS geometry to Shapely geometry ==
-        # Baseline
-        baseShapely = IntersectLines.line_arcgis2shapely(baseFeature, None)
+        # Check if the baseline has multiple features
+        field_names = [f.name for f in arcpy.ListFields(baseFeature)]
+        baseHasMultipleFeatures = 'baseline_id' in field_names
+        
+        # Baseline - convert with or without ID depending on multiple features
+        if baseHasMultipleFeatures:
+            baseShapely = IntersectLines.line_arcgis2shapely(baseFeature, 'baseline_id')  # dict
+            # Get mapping of transect_id to baseline_id
+            transect_baseline_map = {}
+            with arcpy.da.SearchCursor(transectsFeature, ['transect_id', 'baseline_id']) as cursor:
+                for row in cursor:
+                    transect_baseline_map[row[0]] = row[1]
+        else:
+            baseShapely = IntersectLines.line_arcgis2shapely(baseFeature, None)  # list
+            transect_baseline_map = None
+        
         # Shorelines
         shoreShapely = IntersectLines.line_arcgis2shapely(shoreFeature, shoreID)
         # Transects
@@ -116,7 +130,12 @@ class ComputeIntersection(object):
         
         #  == 1. Baseline Intersection Points ==
         # Get the intersection points
-        basePoints = IntersectLines.intersect_baseline(transectsShapely, baseShapely) # dict
+        basePoints = IntersectLines.intersect_baseline(
+            transectsShapely, 
+            baseShapely, 
+            has_multiple_features=baseHasMultipleFeatures,
+            transect_baseline_map=transect_baseline_map
+        )
         
         # Check if the output feature class exists and delete it
         if arcpy.Exists(baseOutFeature):
@@ -134,10 +153,18 @@ class ComputeIntersection(object):
         # Fill with the geometries (intersection points) and the transect_id
         with arcpy.da.InsertCursor(baseOutFeature, [transectsID, "SHAPE@"]) as cursor:
             for id, point in basePoints.items():
-                # Create the arcgis point
-                arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in point.coords][0]
-                # Insert the row with the id and the point
-                cursor.insertRow([id, arc_Point])
+                # Validate that the intersection exists and has coordinates
+                if point and not point.is_empty and hasattr(point, 'coords'):
+                    coords_list = list(point.coords)
+                    if len(coords_list) > 0:
+                        # Create the arcgis point
+                        arc_Point = arcpy.Point(coords_list[0][0], coords_list[0][1])
+                        # Insert the row with the id and the point
+                        cursor.insertRow([id, arc_Point])
+                    else:
+                        arcpy.AddWarning(f"Transect {id}: Empty coordinates in baseline intersection")
+                else:
+                    arcpy.AddWarning(f"Transect {id}: No baseline intersection found")
 
         #  == 2. Shoreline Intersection Points ==
         # Get the intersection points
@@ -167,15 +194,23 @@ class ComputeIntersection(object):
             for t_id_shore_id, point in shorePoints.items():
                 if isinstance(point, list): # The intersection point is a list of points (MultiPoint)
                     for part in point:
-                        # Create the arcgis point
-                        arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in part.coords][0]
-                        # Insert the row with the transect_id and shore_id and the point
-                        cursor.insertRow([t_id_shore_id[0], t_id_shore_id[1], arc_Point])
+                        # Validate that the point has coordinates
+                        if part and not part.is_empty and hasattr(part, 'coords'):
+                            coords_list = list(part.coords)
+                            if len(coords_list) > 0:
+                                # Create the arcgis point
+                                arc_Point = arcpy.Point(coords_list[0][0], coords_list[0][1])
+                                # Insert the row with the transect_id and shore_id and the point
+                                cursor.insertRow([t_id_shore_id[0], t_id_shore_id[1], arc_Point])
                 else:
-                    # Create the arcgis point
-                    arc_Point = [arcpy.Point(coord[0], coord[1]) for coord in point.coords][0]
-                    # Insert the row with the transect_id and shore_id and the point
-                    cursor.insertRow([t_id_shore_id[0], t_id_shore_id[1], arc_Point])
+                    # Validate that the point has coordinates
+                    if point and not point.is_empty and hasattr(point, 'coords'):
+                        coords_list = list(point.coords)
+                        if len(coords_list) > 0:
+                            # Create the arcgis point
+                            arc_Point = arcpy.Point(coords_list[0][0], coords_list[0][1])
+                            # Insert the row with the transect_id and shore_id and the point
+                            cursor.insertRow([t_id_shore_id[0], t_id_shore_id[1], arc_Point])
 
         # Add the other fields of the Polyline Shorelines Feature Class
         # Get the fields to join
@@ -200,12 +235,20 @@ class ComputeIntersection(object):
         # Update the distance_from_base field from the shoreOutFeature
         with arcpy.da.UpdateCursor(shoreOutFeature, ["SHAPE@", transectsID, "distance_from_base"]) as cursor:
             for row in cursor:
-                # Get the geometry of the point
-                shore_shapely_geom = Point([(geom.X, geom.Y) for geom in row[0]][0])
-                # Calculate the distance from the baseline
-                row[2] = basePoints[row[1]].distance(shore_shapely_geom)
-                # Update the row
-                cursor.updateRow(row)
+                transect_id = row[1]
+                # Check if this transect has a baseline intersection
+                if transect_id in basePoints:
+                    # Get the geometry of the point
+                    shore_shapely_geom = Point([(geom.X, geom.Y) for geom in row[0]][0])
+                    # Calculate the distance from the baseline
+                    row[2] = basePoints[transect_id].distance(shore_shapely_geom)
+                    # Update the row
+                    cursor.updateRow(row)
+                else:
+                    # If no baseline intersection, set distance to None and log warning
+                    arcpy.AddWarning(f"Transect {transect_id}: Cannot calculate distance - no baseline intersection found")
+                    row[2] = None
+                    cursor.updateRow(row)
         return
 
 

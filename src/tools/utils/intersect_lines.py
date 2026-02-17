@@ -116,26 +116,48 @@ class IntersectLines():
         
         return feature_points
     
-    def intersect_baseline(transects_feature, baseline_feature):
+    def intersect_baseline(transects_feature, baseline_feature, has_multiple_features=False, transect_baseline_map=None):
         """
         This method computes the intersection between the baseline and transects.
         The output is a dictionary with the transect ID as key and the intersection point as value.
         
         Parameters:
-            transects_feature (dict): Shapely LineString objects
-            baseline_feature (list): Shapely LineString object
+            transects_feature (dict): Shapely LineString objects with transect_id as key
+            baseline_feature (list or dict): Shapely LineString object(s). List if single baseline, dict if multiple.
+            has_multiple_features (bool): True if baseline has multiple features with baseline_id
+            transect_baseline_map (dict): Mapping of transect_id to baseline_id (required if has_multiple_features=True)
             
         Returns:
             base_points (dict): Shapely Point objects
         """
         # Define an empty dictionary to store the intersection points
         base_points = {}
-        # Iterate over the transects and compute the intersection with the baseline
-        for id_transect, line_transect in transects_feature.items():
-            # Compute the intersection between the transect and the baseline
-            intersection = line_transect.intersection(baseline_feature[0])
-            # Store the intersection point in the dictionary
-            base_points.update({id_transect: intersection})
+        
+        if has_multiple_features and transect_baseline_map:
+            # Multiple baseline segments - match each transect with its corresponding baseline
+            for id_transect, line_transect in transects_feature.items():
+                baseline_id = transect_baseline_map.get(id_transect)
+                if baseline_id and baseline_id in baseline_feature:
+                    # Compute intersection with the corresponding baseline segment
+                    intersection = line_transect.intersection(baseline_feature[baseline_id])
+                    if not intersection.is_empty:
+                        # Handle MultiPoint by taking the first point
+                        if intersection.geom_type == 'MultiPoint':
+                            base_points[id_transect] = list(intersection.geoms)[0]
+                        elif intersection.geom_type == 'Point':
+                            base_points[id_transect] = intersection
+        else:
+            # Single baseline segment - original logic
+            baseline_geom = baseline_feature[0] if isinstance(baseline_feature, list) else baseline_feature
+            for id_transect, line_transect in transects_feature.items():
+                # Compute the intersection between the transect and the baseline
+                intersection = line_transect.intersection(baseline_geom)
+                if not intersection.is_empty:
+                    # Handle MultiPoint by taking the first point
+                    if intersection.geom_type == 'MultiPoint':
+                        base_points[id_transect] = list(intersection.geoms)[0]
+                    elif intersection.geom_type == 'Point':
+                        base_points[id_transect] = intersection
 
         return base_points
     
