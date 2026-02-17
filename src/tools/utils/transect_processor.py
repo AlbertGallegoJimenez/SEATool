@@ -220,6 +220,8 @@ class TransectGenerator(object):
     def _create_transect_geometry(self, point, angle):
         """
         Create a transect line geometry from a point extending in the specified direction.
+        The transect extends slightly inland (0.5m) to ensure intersection with baseline,
+        then extends the full length toward the sea.
         
         Parameters:
             point: Tuple (x, y) of the baseline point
@@ -228,16 +230,21 @@ class TransectGenerator(object):
         Returns:
             Polyline geometry
         """
-        start_x, start_y = point[0], point[1]
+        baseline_x, baseline_y = point[0], point[1]
         
         # Convert angle to radians
         angle_rad = math.radians(angle)
         
-        # Calculate end point
-        end_x = start_x + self.length * math.sin(angle_rad)
-        end_y = start_y + self.length * math.cos(angle_rad)
+        # Calculate start point: 0.5m inland from baseline (opposite direction)
+        inland_offset = 0.5  # meters
+        start_x = baseline_x - inland_offset * math.sin(angle_rad)
+        start_y = baseline_y - inland_offset * math.cos(angle_rad)
         
-        # Create polyline
+        # Calculate end point: full length from baseline toward sea
+        end_x = baseline_x + self.length * math.sin(angle_rad)
+        end_y = baseline_y + self.length * math.cos(angle_rad)
+        
+        # Create polyline from inland to sea
         array = arcpy.Array([
             arcpy.Point(start_x, start_y),
             arcpy.Point(end_x, end_y)
