@@ -81,6 +81,19 @@ class GenerateTransects(object):
         distanceValue = parameters[1].valueAsText
         lengthValue = parameters[2].valueAsText
         outFeatures = parameters[3].valueAsText
+        
+        # Check if the baseline feature class has multiple features. 
+        # If so, generate an ID field for the baseline features and propagate the ID field to the transects features.
+        # Get the number of features in the baseline feature class
+        featureCount = int(arcpy.management.GetCount(inFeatures).getOutput(0))
+        if featureCount > 1:
+            # Add an ID field to the baseline feature class
+            arcpy.management.AddField(inFeatures, "baseline_id", 'SHORT')
+            # Calculate baseline_id with sequential numbers starting from 1
+            with arcpy.da.UpdateCursor(inFeatures, ["baseline_id"]) as cursor:
+                for i, row in enumerate(cursor, start=1):
+                    row[0] = i
+                    cursor.updateRow(row)
 
         # Generate transects along the baseline
         arcpy.management.GenerateTransectsAlongLines(inFeatures,
@@ -91,6 +104,10 @@ class GenerateTransects(object):
         # Add a field to the transects feature
         arcpy.management.AddField(outFeatures, "transect_id", 'SHORT')
         arcpy.management.CalculateField(outFeatures, "transect_id", "!OBJECTID!")
+        
+        # If the baseline feature class has multiple features, join the transects features with the baseline features to get the baseline_id field in the transects features.
+        if featureCount > 1:
+            arcpy.management.JoinField(outFeatures, "ORIG_FID", inFeatures, "OBJECTID", ["baseline_id"])
         
         # If the transect has more than 2 vertices, keep only the first two.
         # I don't know the reason why the GenerateTransectsAlongLines tool creates transects with more than 2 vertices, but this is a workaround.
