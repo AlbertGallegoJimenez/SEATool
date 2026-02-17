@@ -8,16 +8,13 @@
 <br />
 <div align="center">
   <a href="https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool">
-    <img src="images/logo-tool.png" alt="Logo" width="270" height="200">
+    <img src="images/Logo Blue.png" alt="Logo" width="270">
   </a>
 
 <h3 align="center">SEATool (Shoreline Evolution Analysis Toolbox) 🌊🛰️</h3>
 
   <p align="center">
     This repository houses a set of tools that allow the user to perform simple and automated regression analysis of a given coastal zone, all integrated into ArcGIS Pro.
-    <br />
-    <a href="https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/src/tools"><strong>Explore the code »</strong></a>
-    <br />
   </p>
 </div>
 
