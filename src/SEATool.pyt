@@ -1,10 +1,7 @@
 import arcpy
 
-# 1a. Generate Transects Along Baseline
+# 1. Generate Transects Along Baseline
 from tools.generateTransects import GenerateTransects
-
-# 1b. Correct Transects
-from tools.correctTransects import CorrectTransects
 
 # 2. Compute Intersections
 from tools.computeIntersections import ComputeIntersection
@@ -22,5 +19,5 @@ class Toolbox(object):
         self.alias = "Shoreline Evolution Analysis Toolboox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [GenerateTransects, CorrectTransects, ComputeIntersection,
+        self.tools = [GenerateTransects, ComputeIntersection,
                       PerformAnalysis, PlotResults]

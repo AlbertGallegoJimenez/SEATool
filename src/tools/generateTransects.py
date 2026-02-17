@@ -1,10 +1,11 @@
 import arcpy, os
+from tools.utils.transect_processor import TransectGenerator
 
 
 class GenerateTransects(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "1a. Generate Transects Along Baseline"
+        self.label = "1. Generate Transects Along Baseline"
         self.description = "Generate transects along the baseline for further analysis based on these transects."
         arcpy.env.overwriteOutput = True
 
@@ -36,6 +37,16 @@ class GenerateTransects(object):
             parameterType="Required",
             direction="Input")
 
+        # Sea side parameter
+        sea_side = arcpy.Parameter(
+            displayName="Sea side relative to baseline direction",
+            name="sea_side",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        sea_side.filter.type = "ValueList"
+        sea_side.filter.list = ["Right", "Left"]
+
         # Derived Output Features parameter
         out_features = arcpy.Parameter(
             displayName="Output Features",
@@ -44,7 +55,7 @@ class GenerateTransects(object):
             parameterType="Required",
             direction="Output")
 
-        parameters = [in_features, distance_parameter, length_parameter, out_features]
+        parameters = [in_features, distance_parameter, length_parameter, sea_side, out_features]
 
         return parameters
 
@@ -61,7 +72,8 @@ class GenerateTransects(object):
         # Set the default values for the distance and length parameters
         params_suggestions = {parameters[1]: "100 Meters",
                               parameters[2]: "300 Meters",
-                              parameters[3]: projectName + "_Transects"}
+                              parameters[3]: "Left",
+                              parameters[4]: projectName + "_Transects"}
         # Update the parameters
         for param in params_suggestions:
             if not param.altered:
@@ -72,6 +84,10 @@ class GenerateTransects(object):
         return
 
     def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        parameters[3].setWarningMessage(
+            "When following the baseline from start to end, on which side is the sea located?")
         return
 
     def execute(self, parameters, messages):
@@ -80,7 +96,8 @@ class GenerateTransects(object):
         inFeatures = parameters[0].valueAsText
         distanceValue = parameters[1].valueAsText
         lengthValue = parameters[2].valueAsText
-        outFeatures = parameters[3].valueAsText
+        seaSide = parameters[3].valueAsText
+        outFeatures = parameters[4].valueAsText
         
         # Check if the baseline feature class has multiple features. 
         # If so, generate an ID field for the baseline features and propagate the ID field to the transects features.
@@ -95,36 +112,23 @@ class GenerateTransects(object):
                     row[0] = i
                     cursor.updateRow(row)
 
-        # Generate transects along the baseline
-        arcpy.management.GenerateTransectsAlongLines(inFeatures,
-                                                     outFeatures,
-                                                     distanceValue + " Meters",
-                                                     lengthValue + " Meters",
-                                                     "NO_END_POINTS")
-        # Add a field to the transects feature
-        arcpy.management.AddField(outFeatures, "transect_id", 'SHORT')
-        arcpy.management.CalculateField(outFeatures, "transect_id", "!OBJECTID!")
+        # Extract numeric values from the distance and length parameters
+        distance_meters = float(distanceValue.split()[0])
+        length_meters = float(lengthValue.split()[0])
         
-        # If the baseline feature class has multiple features, join the transects features with the baseline features to get the baseline_id field in the transects features.
-        if featureCount > 1:
-            arcpy.management.JoinField(outFeatures, "ORIG_FID", inFeatures, "OBJECTID", ["baseline_id"])
+        # Generate transects using the new TransectGenerator class
+        arcpy.AddMessage("Generating transects with intelligent smoothing...")
+        generator = TransectGenerator(
+            baseline_fc=inFeatures,
+            distance=distance_meters,
+            length=length_meters,
+            sea_side=seaSide,
+            output_fc=outFeatures
+        )
+        generator.generate_transects()
         
-        # If the transect has more than 2 vertices, keep only the first two.
-        # I don't know the reason why the GenerateTransectsAlongLines tool creates transects with more than 2 vertices, but this is a workaround.
-        with arcpy.da.UpdateCursor(outFeatures, ["transect_id", "SHAPE@"]) as cursor:
-            for row in cursor:
-                if len(row[1]) > 1: # If the transect has more than 2 vertices
-                    # Keep only the first two vertices
-                    row[1] = arcpy.Polyline(arcpy.Array([(point.X, point.Y) for point in row[1][:2]]))
-                    # Update the row
-                    cursor.updateRow(row)
-                else:
-                    pass
-        # Delete the ORIG_FID field that is created by the GenerateTransectsAlongLines tool
-        fieldList = [field.name for field in arcpy.ListFields(outFeatures)]
-        if 'ORIG_FID' in fieldList:
-            arcpy.management.DeleteField(outFeatures, 'ORIG_FID')
-
+        arcpy.AddMessage(f"Transects generated successfully extending towards the sea on the {seaSide.lower()} side.")
+        
         return
 
     def postExecute(self, parameters):

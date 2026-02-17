@@ -3,103 +3,273 @@ import math
 import numpy as np
 import pandas as pd
 
-class TransectProcessor(object):
-    def __init__(self, df, corr_factor):
+
+class TransectGenerator(object):
+    def __init__(self, baseline_fc, distance, length, sea_side, output_fc):
         """
-        This class processes the transects to correct the angle values.
-        The class detects the transects that are totally inverted and the transects with large differences in the bearing angle.
+        This class generates transects along a baseline with intelligent smoothing to handle
+        abrupt orientation changes and circular angle geometry (0° = 360°).
         
         Parameters:
-            df (DataFrame): The DataFrame with the transects.
-            corr_factor (int): The correction factor (threshold) to classify the transects with large differences.
+            baseline_fc (str): Path to the baseline feature class.
+            distance (float): Distance between transects in meters.
+            length (float): Length of each transect in meters.
+            sea_side (str): Direction to extend transects ("Right" or "Left" relative to baseline direction).
+            output_fc (str): Path to the output transect feature class.
             
         Returns:
             None
         """
-        # Initialize the class with a DataFrame
-        self.df = df.copy()
-        # Set the correction factor
-        self.corr_factor = corr_factor
-        # Calculate the bearing differences between consecutive transects
-        self.df['diff_bear'] = self.df['Bearing'].diff()
-
-    def invert_angles(self):
+        self.baseline_fc = baseline_fc
+        self.distance = distance
+        self.length = length
+        self.sea_side = sea_side
+        self.output_fc = output_fc
+        self.spatial_ref = arcpy.Describe(baseline_fc).spatialReference
+        
+        # Check if baseline has multiple features
+        self.has_baseline_id = self._check_baseline_id()
+        
+    def _check_baseline_id(self):
+        """Check if the baseline feature class has a baseline_id field."""
+        field_names = [f.name for f in arcpy.ListFields(self.baseline_fc)]
+        return 'baseline_id' in field_names
+    
+    def generate_transects(self):
         """
-        This method inverts the angles of the transects that are totally inverted.
-        The method detects the first transects that are inverted (if there are more than one change).
-        To do so, find a difference angle around ~180º (it has been selected a range of 180 +-50).
-        Then, the method detects the transects that need to be inverted and rotates them 180 degrees.
+        Main method to generate transects along the baseline.
+        Processes each baseline feature independently if multiple features exist.
+        """
+        # Create output feature class
+        arcpy.management.CreateFeatureclass(
+            out_path=arcpy.env.workspace if arcpy.env.workspace else "in_memory",
+            out_name=self.output_fc.split("\\")[-1],
+            geometry_type="POLYLINE",
+            spatial_reference=self.spatial_ref
+        )
+        
+        # Add transect_id field
+        arcpy.management.AddField(self.output_fc, "transect_id", "SHORT")
+        
+        # Add baseline_id field if needed
+        if self.has_baseline_id:
+            arcpy.management.AddField(self.output_fc, "baseline_id", "SHORT")
+        
+        # Generate transects for each baseline feature
+        transect_counter = 1
+        
+        if self.has_baseline_id:
+            # Process each baseline feature separately
+            fields = ["SHAPE@", "baseline_id"]
+        else:
+            # Process all as single baseline
+            fields = ["SHAPE@"]
+        
+        with arcpy.da.SearchCursor(self.baseline_fc, fields) as cursor:
+            for row in cursor:
+                baseline_geom = row[0]
+                baseline_id = row[1] if self.has_baseline_id else None
+                
+                # Generate transects for this baseline feature
+                transects = self._generate_transects_for_feature(baseline_geom, baseline_id, transect_counter)
+                
+                # Insert transects into output feature class
+                transect_counter = self._insert_transects(transects, transect_counter)
+        
+        return self.output_fc
+    
+    def _generate_transects_for_feature(self, baseline_geom, baseline_id, start_id):
+        """
+        Generate transects for a single baseline feature with smoothed orientations.
         
         Parameters:
-            None
-        
-        Returns:
-            None
-        """
-        # Define the boolean mask to detect the transects that are totally inverted
-        mask_180 = (self.df['diff_bear'].abs() >= 130) & (self.df['diff_bear'].abs() < 230)
-        
-        # Get a list with the transects that need to be inverted
-        start_change_transects = self.df[mask_180]['transect_id'].to_list()
-
-        # Define an empty list of the transects that need to be inverted
-        transects2correct = []
-        # Iterate over the transects that need to be inverted
-        for i, _ in enumerate(start_change_transects):
-            if (i + 1) % 2 != 0: # Odd number
-                if i == len(start_change_transects) - 1: # Is the last change detected
-                    # Get the transects that need to be inverted
-                    mask = (self.df['transect_id'] > start_change_transects[i] - 1)
-                    # Append the transects to the list
-                    transects2correct.extend(self.df[mask]['transect_id'].to_list())
-                else: # The change is not the last
-                    # Get the transects that need to be inverted
-                    mask = (self.df['transect_id'] > start_change_transects[i] - 1) & (self.df['transect_id'] <= start_change_transects[i + 1] - 1)
-                    # Append the transects to the list
-                    transects2correct.extend(self.df[mask]['transect_id'].to_list())
-            else:
-                pass
-        # Create a new column to store the angle that needs to be rotated
-        self.df['Angle'] = 0 # Initialize the column with zeros
-        # Rotate the bearing angle 180 degrees
-        self.df.loc[self.df['transect_id'].isin(transects2correct), 'Angle'] = 180
-
-    def classify_transects(self):
-        """
-        This method classifies the transects with large differences in the bearing angle.
-        The method uses the correction factor to classify the transects with large differences.
-        The method also tries not to take into account the differences in the 360-0 sector. An upper limit of 330 has been set.
-        
-        Parameters:
-            None
+            baseline_geom: Polyline geometry of the baseline
+            baseline_id: ID of the baseline feature (or None)
+            start_id: Starting transect ID
             
         Returns:
-            None
+            List of tuples: [(geometry, transect_id, baseline_id), ...]
         """
-        # Define the boolean mask to detect the transects with large differences
-        mask = (self.df['diff_bear'].abs() > self.corr_factor) & (self.df['diff_bear'].abs() < 330)
-        # Create a new column to store the classification
-        self.df['correct_angle'] = mask
-
-    def interpolate_angles(self):
+        transects = []
+        
+        # Get points along the baseline at specified intervals
+        points_data = self._get_baseline_points(baseline_geom)
+        
+        # Calculate smoothed orientations using circular geometry
+        orientations = self._calculate_smoothed_orientations(points_data)
+        
+        # Generate transect geometries
+        for i, (point, orientation) in enumerate(zip(points_data, orientations)):
+            # Calculate perpendicular angle based on sea side
+            transect_angle = self._calculate_transect_angle(orientation)
+            
+            # Create transect geometry
+            transect_geom = self._create_transect_geometry(point, transect_angle)
+            
+            # Store transect data
+            transect_id = start_id + i
+            transects.append((transect_geom, transect_id, baseline_id))
+        
+        return transects
+    
+    def _get_baseline_points(self, baseline_geom):
         """
-        This method interpolates the angles for the transects with large differences.
-        The method uses the pandas interpolate method to calculate the missing angles.
+        Get points along the baseline at specified intervals.
         
         Parameters:
-            None
+            baseline_geom: Polyline geometry
             
         Returns:
-            None
+            List of (x, y, distance_along) tuples
         """
-        # Create a new column to store the new bearing angles
-        self.df['new_bearing'] = self.df['Bearing']
-        # Set the new bearing angles to NaN for the transects with large differences
-        self.df.loc[self.df['correct_angle'], 'new_bearing'] = np.nan
-        # Interpolate the missing angles
-        self.df['new_bearing'] = self.df['new_bearing'].interpolate(method='linear')
-        # Modify the "Angle" column with the angle that needs to be rotated
-        self.df['Angle'] = self.df['new_bearing'] - self.df['Bearing']
+        points_data = []
+        total_length = baseline_geom.length
+        
+        # Generate points at specified intervals
+        current_distance = 0
+        while current_distance <= total_length:
+            point = baseline_geom.positionAlongLine(current_distance)
+            centroid = point.centroid
+            points_data.append((centroid.X, centroid.Y, current_distance))
+            current_distance += self.distance
+        
+        return points_data
+    
+    def _calculate_smoothed_orientations(self, points_data):
+        """
+        Calculate smoothed orientations at each point using circular averaging.
+        Uses a moving window to smooth out abrupt changes in baseline direction.
+        
+        Parameters:
+            points_data: List of (x, y, distance_along) tuples
+            
+        Returns:
+            List of smoothed orientations in degrees (0-360)
+        """
+        if len(points_data) < 2:
+            return [0]  # Default orientation if insufficient points
+        
+        # Window size for smoothing (number of points on each side)
+        window_points = 5
+        
+        orientations = []
+        
+        for i in range(len(points_data)):
+            # Define window bounds
+            start_idx = max(0, i - window_points)
+            end_idx = min(len(points_data) - 1, i + window_points)
+            
+            # Extract window points
+            window = points_data[start_idx:end_idx + 1]
+            
+            if len(window) < 2:
+                # Use simple bearing if window too small
+                if i > 0:
+                    dx = points_data[i][0] - points_data[i-1][0]
+                    dy = points_data[i][1] - points_data[i-1][1]
+                else:
+                    dx = points_data[i+1][0] - points_data[i][0]
+                    dy = points_data[i+1][1] - points_data[i][1]
+                angle = math.degrees(math.atan2(dx, dy)) % 360
+                orientations.append(angle)
+                continue
+            
+            # Calculate bearing vectors between consecutive points in window
+            vectors_x = []
+            vectors_y = []
+            
+            for j in range(len(window) - 1):
+                dx = window[j+1][0] - window[j][0]
+                dy = window[j+1][1] - window[j][1]
+                
+                # Convert to unit vector with angle
+                angle = math.atan2(dx, dy)  # Bearing angle in radians
+                vectors_x.append(math.sin(angle))
+                vectors_y.append(math.cos(angle))
+            
+            # Average vectors (circular mean)
+            mean_x = np.mean(vectors_x)
+            mean_y = np.mean(vectors_y)
+            
+            # Convert back to angle
+            smoothed_angle = math.degrees(math.atan2(mean_x, mean_y)) % 360
+            orientations.append(smoothed_angle)
+        
+        return orientations
+    
+    def _calculate_transect_angle(self, baseline_orientation):
+        """
+        Calculate the angle for the transect based on baseline orientation and sea side.
+        
+        Parameters:
+            baseline_orientation: Orientation of baseline in degrees (0-360)
+            
+        Returns:
+            Transect angle in degrees (0-360)
+        """
+        # Calculate perpendicular angle
+        if self.sea_side == "Right":
+            # Perpendicular to the right (clockwise 90°)
+            transect_angle = (baseline_orientation + 90) % 360
+        else:  # "Left"
+            # Perpendicular to the left (counter-clockwise 90°)
+            transect_angle = (baseline_orientation - 90) % 360
+        
+        return transect_angle
+    
+    def _create_transect_geometry(self, point, angle):
+        """
+        Create a transect line geometry from a point extending in the specified direction.
+        
+        Parameters:
+            point: Tuple (x, y) of the baseline point
+            angle: Angle in degrees (0-360) for transect direction
+            
+        Returns:
+            Polyline geometry
+        """
+        start_x, start_y = point[0], point[1]
+        
+        # Convert angle to radians
+        angle_rad = math.radians(angle)
+        
+        # Calculate end point
+        end_x = start_x + self.length * math.sin(angle_rad)
+        end_y = start_y + self.length * math.cos(angle_rad)
+        
+        # Create polyline
+        array = arcpy.Array([
+            arcpy.Point(start_x, start_y),
+            arcpy.Point(end_x, end_y)
+        ])
+        
+        return arcpy.Polyline(array, self.spatial_ref)
+    
+    def _insert_transects(self, transects, start_id):
+        """
+        Insert generated transects into the output feature class.
+        
+        Parameters:
+            transects: List of (geometry, transect_id, baseline_id) tuples
+            start_id: Starting transect ID
+            
+        Returns:
+            Next available transect ID
+        """
+        if self.has_baseline_id:
+            fields = ["SHAPE@", "transect_id", "baseline_id"]
+        else:
+            fields = ["SHAPE@", "transect_id"]
+        
+        with arcpy.da.InsertCursor(self.output_fc, fields) as cursor:
+            for transect_geom, transect_id, baseline_id in transects:
+                if self.has_baseline_id:
+                    cursor.insertRow([transect_geom, transect_id, baseline_id])
+                else:
+                    cursor.insertRow([transect_geom, transect_id])
+        
+        return start_id + len(transects)
+
 
 class RotateFeatures(object):
     def __init__(self, df, fclass):
