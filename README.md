@@ -40,7 +40,9 @@ This tool is developed as part of a [Python Toolbox](https://pro.arcgis.com/en/p
 In terms of data, this tool relies on the use of the following two files:
 * <ins>**Baseline**</ins> (Vector - Polyline). This is the reference line used to assess the evolution of the coastal stretch. It can be digitized manually by the user with the help of a background orthophoto, taking care to place the baseline **inland** (behind all shorelines). The baseline must capture the general orientation of the coast.
 * <ins>**Shorelines**</ins> (Vector - Polyline). These are the time series of the different shorelines on which the analysis will be based.
-  * For the correct functioning of the tool, the file must have a **numeric ID** and **date fields**.
+  * For the correct functioning of the tool, the file must have two required fields:
+    * **Numeric ID**: A unique identifier for each shoreline
+    * **Date**: in ISO 8601 format (`YYYY-MM-DD`, e.g., `2023-05-15`)
 
 > [!WARNING]
 > Note that both **Baseline** and **Shorelines** must be defined in a projected coordinate system.
@@ -48,12 +50,15 @@ In terms of data, this tool relies on the use of the following two files:
 
 ### Installation
 
-0. Make sure you have cloned the base ArcGIS Anaconda environment so you can install more packages. More info [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
-1. Clone this repo on your computer.
-2. Check that you have installed all the required libraries used in the toolbox. All packages with their tested versions are listed in [requirements.txt](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/requirements.txt). To install the packages, follow these steps:
+0. Make sure **you have cloned the base ArcGIS Anaconda environment** so you can install more packages. More info on how to clone the base environment [here](https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/clone-an-environment.htm).
+1. **Download this repository** on your computer. You have two options:
+   - **Via Git** (recommended): Open a terminal and run `git clone https://github.com/AlbertGallegoJimenez/SEATool`
+   - **Direct download**: Click the green `<> Code` button at the top of this page, then select `Download ZIP` and extract it to your desired location.
+2. Check that you have installed all the **required libraries** used in the toolbox. All packages with their tested versions are listed in [requirements.txt](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/requirements.txt). To install the packages, follow these steps:
    1. Open an Anaconda terminal and activate the cloned version of the ArcGIS Anaconda environment. (_If you don't have Anaconda installed on your computer, you can try to open the ArcGIS terminal located in "C:\Program Files\ArcGIS\Pro\bin\Python\Scripts\proenv.bat" or just type "Python Command Prompt" in the Windows search box and open this terminal_)
    2. Navigate to the main directory of your local clone of the repo and install the packages via pip:
       ``` shell
+        cd path/to/SEATool
         pip install -r requirements.txt
       ```
 3. Open the Catalog Pane in ArcGIS Pro and add the Python Toolbox (.pyt) to see the tools.
