@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# ArcGIS Pro Project Files - Keep only GDB in example
+example/bavaro_project/*.aprx
+example/bavaro_project/*.tbx
+example/bavaro_project/*.atbx
+example/bavaro_project/*.sde
+example/bavaro_project/*.bak
+
+# ArcGIS Pro Temporary and Index Files
+example/bavaro_project/Index/
+example/bavaro_project/ImportLog/
+example/bavaro_project/GpMessages/
+example/bavaro_project/Thumbnail
+example/bavaro_project/*.lock
+
+# GDB - Keep structure but ignore temporary files
+example/bavaro_project/*.gdb/*.lock
+example/bavaro_project/*.gdb/*.freelist
+example/bavaro_project/*.gdb/a*.spx
+example/bavaro_project/*.gdb/a*.atx
+
+# Output folders from SEATool
+example/bavaro_project/Output data/
+example/bavaro_project/Plots results/
+
+# Tool metadata XML files (auto-generated)
+src/*.pyt.xml
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
