@@ -3,6 +3,7 @@
 <!-- PROJECT SHIELDS -->
 [![Release][release-shield]][release-url]
 [![LastCommit][lastcommit-shield]][lastcommit-url]
+![ArcGISProBadge][arcgispro-badge-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -22,7 +23,7 @@
 ## About The Project
 
 <div align="center">
-  <img src="images/framework.png" width="400">
+  <img src="images/framework.png" width="300">
 </div>
 
 The analysis methodology is simple but effective, it is based on the analysis of shoreline variations by segmenting the area into profiles and evaluating them with linear regressions.
@@ -92,3 +93,4 @@ Project Link: [https://github.com/AlbertGallegoJimenez/SEATool](https://github.c
 [release-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/releases
 [lastcommit-shield]: https://img.shields.io/github/last-commit/AlbertGallegoJimenez/shoreline-evolution-tool.svg?style=for-the-badge
 [lastcommit-url]: https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/releases
+[arcgispro-badge-url]: https://img.shields.io/badge/-ArcGIS%20Pro-2C7AC3?logo=arcgis&logoColor=white&style=for-the-badge
