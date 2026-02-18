@@ -255,4 +255,37 @@ class ComputeIntersection(object):
     def postExecute(self, parameters):
         """This method takes place after outputs are processed and
         added to the display."""
+        # Update the style of intersection points feature classes
+        shores_rgb_list = [30, 179, 178, 255] # RGBA values for the points color
+        base_rgb_list = [223, 179, 103, 255] # RGBA values for the points color
+
+        aprx = arcpy.mp.ArcGISProject("CURRENT")
+        aprxMap = aprx.activeMap
+
+        # Get the output feature classes names from parameters
+        baselineFeatureName = os.path.basename(parameters[4].valueAsText)
+        shorelineFeatureName = os.path.basename(parameters[5].valueAsText)
+        
+        for layer in [baselineFeatureName, shorelineFeatureName]:
+            pointsFeature = aprxMap.listLayers(layer)[0]
+
+            # Update the symbology of the points feature class
+            sym = pointsFeature.symbology
+            if layer == baselineFeatureName:
+                sym.renderer.symbol.color = {"RGB": base_rgb_list}
+                sym.renderer.symbol.size = 5
+            else:
+                sym.renderer.symbol.color = {"RGB": shores_rgb_list}
+                sym.renderer.symbol.size = 4
+            
+            pointsFeature.symbology = sym
+
+        # Update the style of the shoreline feature class
+        shorelineFeature = aprxMap.listLayers(os.path.basename(parameters[1].valueAsText))[0]
+        shoreline_color_rgb_list = [8, 70, 116, 255] # RGBA values for the shoreline color
+        sym = shorelineFeature.symbology
+        sym.renderer.symbol.color = {"RGB": shoreline_color_rgb_list}
+        sym.renderer.symbol.width = 1
+        shorelineFeature.symbology = sym
+
         return
