@@ -115,6 +115,8 @@ class TransectGenerator(object):
     def _get_baseline_points(self, baseline_geom):
         """
         Get points along the baseline at specified intervals.
+        The first transect has a small longitudinal offset to avoid further spatial operations 
+        mismatches due to placing it exactly at the baseline start.
         
         Parameters:
             baseline_geom: Polyline geometry
@@ -126,7 +128,10 @@ class TransectGenerator(object):
         total_length = baseline_geom.length
         
         # Generate points at specified intervals
-        current_distance = 0
+        # Start with a small longitudinal offset (1m) for the first transect
+        longitudinal_offset = 1.0  # meters
+        current_distance = longitudinal_offset
+        
         while current_distance <= total_length:
             point = baseline_geom.positionAlongLine(current_distance)
             centroid = point.centroid
