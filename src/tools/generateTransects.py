@@ -137,8 +137,25 @@ class GenerateTransects(object):
         # Update the labels of the transect feature
         aprx = arcpy.mp.ArcGISProject('CURRENT')
         aprxMap = aprx.activeMap
-        transectsFeature = aprxMap.listLayers(os.path.basename(parameters[0].valueAsText))[0]
+        transectsFeature = aprxMap.listLayers(os.path.basename(parameters[4].valueAsText))[0]
         labelClass = transectsFeature.listLabelClasses()[0]
         labelClass.expression = "$feature.transect_id"
         transectsFeature.showLabels = True
+
+        # Set the color and width of the transect features
+        transects_color_rgb_list = [30, 179, 178, 255] # RGBA values for the transects color
+        transects_width = 2
+        sym = transectsFeature.symbology
+        sym.renderer.symbol.color = {"RGB": transects_color_rgb_list}
+        sym.renderer.symbol.size = transects_width
+        transectsFeature.symbology = sym
+
+        # Set the style for the baseline feature
+        baselineFeature = aprxMap.listLayers(os.path.basename(parameters[0].valueAsText))[0]
+        baseline_color_rgb_list = [223, 179, 103, 255] # RGBA values for the baseline color
+        baseline_width = 3
+        sym = baselineFeature.symbology
+        sym.renderer.symbol.color = {"RGB": baseline_color_rgb_list}
+        sym.renderer.symbol.size = baseline_width
+        baselineFeature.symbology = sym
         return
