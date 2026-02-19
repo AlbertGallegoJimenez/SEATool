@@ -69,25 +69,13 @@ In terms of data, this tool relies on the use of the following two files:
 <!-- USAGE -->
 ## Usage
 
-### Video Tutorial
-
-A comprehensive video tutorial covering installation, configuration, and usage of all SEATool tools is available:
+A comprehensive video tutorial covering installation, setup, and usage of all SEATool tools is available:
 
 <div align="center">
 <a href="https://www.youtube.com/watch?v=QAmCA-zV-B4">
-  <img src="https://img.youtube.com/vi/QAmCA-zV-B4/maxresdefault.jpg" alt="SEATool Video Tutorial" width="60%">
+  <img src="https://img.youtube.com/vi/QAmCA-zV-B4/maxresdefault.jpg" alt="SEATool Video Tutorial" width="50%">
 </a>
 <p><strong>📹 Watch the complete tutorial on YouTube</strong></p>
-</div>
-
-### Step-by-Step Guide
-
-For a detailed step-by-step written guide on how to run the different tools that make up the toolbox, visit [this guide](https://arcg.is/ez9KK0). The example for testing the tool is available in the [example](https://github.com/AlbertGallegoJimenez/shoreline-evolution-tool/tree/main/example) folder of the repository.
-
-<div align="center">
-<a href="https://arcg.is/ez9KK0">
-  <img src="images/guide-website.PNG" alt="Website thumbnail" width="50%">
-</a>
 </div>
 
 <!-- CONTACT -->
