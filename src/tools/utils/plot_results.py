@@ -20,8 +20,12 @@ plt.style.use('classic')
 plt.rcParams['axes.grid'] = True
 plt.rcParams['grid.linestyle'] = '--'
 plt.rcParams['grid.linewidth'] = 0.5
-plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['#5B9CFD', '#FECB31', '#bfbbd9', '#fa8174', '#81b1d2',
-                                                    '#fdb462', '#b3de69', '#bc82bd', '#ccebc4', '#ffed6f'])
+plt.rcParams['axes.prop_cycle'] = plt.cycler(
+    color=[
+        '#084674', '#DFB367', '#1EB3B2', '#959B9B', '#81b1d2',
+        '#fdb462', '#b3de69', '#bc82bd', '#ccebc4', '#ffed6f'
+        ]
+            )
 # Get the color palette
 palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
@@ -165,12 +169,12 @@ class PlottingUtils():
         # Plot all values as scatter
         ax.scatter(self.shore_intersections_df['transect_id'],
                    self.shore_intersections_df['distance_from_base'],
-                   color='#5B9CFD', alpha=.1, lw=0, zorder=1)
+                   color=palette[0], alpha=.1, lw=0, zorder=1)
 
         # Plot average width value for each transect
         ax.plot(self.shore_intersections_df['transect_id'].unique(),
                 self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean(),
-                label='avg', color='#FECB31', lw=2, zorder=2)
+                label='avg', color=palette[1], lw=2, zorder=2)
         
         # Plot mean +-std width value for each transect
         ax.fill_between(self.shore_intersections_df['transect_id'].unique(),
@@ -178,7 +182,7 @@ class PlottingUtils():
                         1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
                         self.shore_intersections_df.groupby('transect_id')['distance_from_base'].mean()-\
                         1 * self.shore_intersections_df.groupby('transect_id')['distance_from_base'].std(),
-                        color='#5B9CFD', alpha=.5, lw=0, label='avg\u00B1std', zorder=0) #color='#bfbbd9'
+                        color=palette[0], alpha=.5, lw=0, label='avg\u00B1std', zorder=0) #color='#bfbbd9'
         
         # Plot settings
         #ax.set_xticks((np.arange(0, max(self.shore_intersections_df['transect_id']) + 2, 2)).tolist())
@@ -308,11 +312,11 @@ class PlottingUtils():
             
             # Median values Line plot
             ax[i].plot(data.groupby('month')['distance_from_base'].median(),
-                    color='#FECB31', marker='o', markeredgecolor=None, alpha=.7)
+                    color=palette[1], marker='o', markeredgecolor=None, alpha=.7)
             
             # Box plot
-            medianprops = dict(linestyle='-', linewidth=2, color='#FECB31')
-            whiskerprops = dict(linestyle='-', color='#5B9CFD')
+            medianprops = dict(linestyle='-', linewidth=2, color=palette[1])
+            whiskerprops = dict(linestyle='-', color=palette[0])
             data.boxplot(column='distance_from_base', by='month', ax=ax[i], medianprops=medianprops, whiskerprops=whiskerprops)
             
             # Plot settings
