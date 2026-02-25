@@ -96,6 +96,17 @@ class ShorelineEvolution:
         """
         return self.df.iloc[-1]['distance_from_base'] - self.df.iloc[0]['distance_from_base']
 
+    def EPR(self):
+        """
+        The end point rate (EPR) is calculated by dividing the net shoreline movement (NSM)
+        by the number of years elapsed between the oldest and the youngest shoreline.
+
+        Returns:
+            float: EPR (m/year)
+        """
+        years = (self.df.index[-1] - self.df.index[0]).days / 365.24
+        return self.NSM() / years
+
     def compute_all_metrics(self):
         """
         Computes all metrics in a single call, reusing the model fitted in __init__
@@ -114,4 +125,5 @@ class ShorelineEvolution:
             "RMSE": self.RMSE(),
             "SCE": self.SCE(),
             "NSM": self.NSM(),
+            "EPR": self.EPR(),
         }
