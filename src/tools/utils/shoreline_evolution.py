@@ -95,3 +95,23 @@ class ShorelineEvolution:
             float: NSM
         """
         return self.df.iloc[-1]['distance_from_base'] - self.df.iloc[0]['distance_from_base']
+
+    def compute_all_metrics(self):
+        """
+        Computes all metrics in a single call, reusing the model fitted in __init__
+        and avoiding redundant OLS refitting.
+
+        Returns:
+            dict: Dictionary with all computed metrics.
+        """
+        annual_rate, lower_ci, upper_ci = self.LRR()
+        return {
+            "LRR": annual_rate,
+            "LCI_low": lower_ci,
+            "LCI_upp": upper_ci,
+            "R2": self.R2(),
+            "Pvalue": self.Pvalue(),
+            "RMSE": self.RMSE(),
+            "SCE": self.SCE(),
+            "NSM": self.NSM(),
+        }

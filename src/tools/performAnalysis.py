@@ -72,26 +72,17 @@ class PerformAnalysis(object):
             df = df.sort_values([transectsID, "date"])
 
         # Perform the Linear Regression Analysis on each transect
-        # Calculate the metrics of the Linear Regression Fit
-        shore_metrics = pd.DataFrame({transectsID: sorted(df[transectsID].unique())})
-        # LRR: Linear Regression Rate and Confidence Intervals
-        shore_metrics[["LRR", "LCI_low", "LCI_upp"]] = shore_metrics[transectsID].apply(
-            lambda x: pd.Series(ShorelineEvolution(df=df, transect_id=x).LRR()))
-        # R2: Coefficient of Determination
-        shore_metrics["R2"] = shore_metrics[transectsID].apply(
-            lambda x: ShorelineEvolution(df=df, transect_id=x).R2())
-        # Pvalue: P-value of the Linear Regression Fit
-        shore_metrics["Pvalue"] = shore_metrics[transectsID].apply(
-            lambda x: ShorelineEvolution(df=df, transect_id=x).Pvalue())
-        # RMSE: Root Mean Square Error
-        shore_metrics["RMSE"] = shore_metrics[transectsID].apply(
-            lambda x: ShorelineEvolution(df=df, transect_id=x).RMSE())
-        # SCE: Shoreline Change Envelope
-        shore_metrics["SCE"] = shore_metrics[transectsID].apply(
-            lambda x: ShorelineEvolution(df=df, transect_id=x).SCE())
-        # NSM: Net Shoreline Movement
-        shore_metrics["NSM"] = shore_metrics[transectsID].apply(
-            lambda x: ShorelineEvolution(df=df, transect_id=x).NSM())
+        # Each transect is fitted only once via compute_all_metrics()
+        metrics_list = []
+        for transect_id in sorted(df[transectsID].unique()):
+            metrics = ShorelineEvolution(df=df, transect_id=transect_id).compute_all_metrics()
+            metrics[transectsID] = transect_id
+            metrics_list.append(metrics)
+
+        shore_metrics = pd.DataFrame(metrics_list)
+        # Reorder columns: transect_id first
+        cols = [transectsID] + [c for c in shore_metrics.columns if c != transectsID]
+        shore_metrics = shore_metrics[cols]
         
         # Add the metrics to the Transects Feature Class
         metrics_fields = shore_metrics.columns[1::].tolist() # Exclude the transect ID
