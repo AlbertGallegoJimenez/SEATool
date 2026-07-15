@@ -49,11 +49,11 @@ class TransectGenerator(object):
         )
         
         # Add transect_id field
-        arcpy.management.AddField(self.output_fc, "transect_id", "SHORT")
+        arcpy.management.AddField(self.output_fc, "transect_id", "LONG")
         
         # Add baseline_id field if needed
         if self.has_baseline_id:
-            arcpy.management.AddField(self.output_fc, "baseline_id", "SHORT")
+            arcpy.management.AddField(self.output_fc, "baseline_id", "LONG")
         
         # Generate transects for each baseline feature
         transect_counter = 1

@@ -105,7 +105,7 @@ class GenerateTransects(object):
         featureCount = int(arcpy.management.GetCount(inFeatures).getOutput(0))
         if featureCount > 1:
             # Add an ID field to the baseline feature class
-            arcpy.management.AddField(inFeatures, "baseline_id", 'SHORT')
+            arcpy.management.AddField(inFeatures, "baseline_id", 'LONG')
             # Calculate baseline_id with sequential numbers starting from 1
             with arcpy.da.UpdateCursor(inFeatures, ["baseline_id"]) as cursor:
                 for i, row in enumerate(cursor, start=1):

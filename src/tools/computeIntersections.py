@@ -149,7 +149,7 @@ class ComputeIntersection(object):
                                             geometry_type="POINT",
                                             spatial_reference=sr)
         # Add the transect_id field
-        arcpy.management.AddField(baseOutFeature, transectsID, 'SHORT')
+        arcpy.management.AddField(baseOutFeature, transectsID, 'LONG')
         # Fill with the geometries (intersection points) and the transect_id
         with arcpy.da.InsertCursor(baseOutFeature, [transectsID, "SHAPE@"]) as cursor:
             for id, point in basePoints.items():
@@ -182,7 +182,7 @@ class ComputeIntersection(object):
                                             spatial_reference=sr)
         # Add the transect_id, shore_id and the distance from baseline fields
         fields_to_add = [transectsID, shoreID, "distance_from_base"]
-        data_type = ["SHORT", "SHORT", "DOUBLE"]
+        data_type = ["LONG", "LONG", "DOUBLE"]
         create_new_fields(shoreOutFeature, fields_to_add, data_type)
         
         """
